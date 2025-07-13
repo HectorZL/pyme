@@ -1,0 +1,252 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PYCTEM.ANIME - Tu plataforma para ver y descubrir anime">
+    <meta name="theme-color" content="#000000">
+    <title>{% block title %}PYCTEM.ANIME{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{% static 'images/favicon.ico' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'site.webmanifest' %}">
+    <meta name="msapplication-TileColor" content="#da532c">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components/responsive.css' %}">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" 
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- Theme preference -->
+    <!-- Theme Script -->
+    <script>
+        // Check for saved theme preference or use system preference
+        const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+        const currentTheme = localStorage.getItem('theme') || 
+                           (prefersDarkScheme.matches ? 'dark' : 'light');
+        
+        // Apply the theme
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            // Update the toggle button icon
+            const themeToggle = document.getElementById('theme-toggle');
+            if (themeToggle) {
+                const icon = themeToggle.querySelector('i');
+                icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+        }
+        
+        // Initialize theme toggle button
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', toggleTheme);
+                // Set initial icon
+                const icon = themeToggle.querySelector('i');
+                if (icon) {
+                    icon.className = currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+                }
+            }
+        });
+    </script>
+</head>
+<body class="{% if request.user.is_authenticated %}logged-in{% endif %}">
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-container">
+            <!-- Logo -->
+            <div class="logo-container">
+                <a href="{% url 'anime:home' %}" class="logo">
+                    <span class="logo-text">PYCTEM</span><span class="logo-highlight">.ANIME</span>
+                </a>
+            </div>
+
+            <!-- Desktop Navigation -->
+            <nav class="navbar navbar-expand-lg">
+                <!-- Mobile Toggle Button -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <!-- Navigation Links -->
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a href="{% url 'anime:home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                                <i class="fas fa-home"></i> Inicio
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'anime:catalog' %}" class="nav-link {% if 'catalog' in request.path %}active{% endif %}">
+                                <i class="fas fa-list"></i> Catálogo
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="fas fa-tags"></i> Géneros
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="fas fa-tv"></i> Nuevos Episodios
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- User Actions and Theme Toggle -->
+            <div class="user-actions">
+                <div class="header-actions">
+                    <!-- Theme Toggle -->
+                    <button id="theme-toggle" class="btn btn-icon btn-outline" aria-label="Toggle theme" title="Cambiar tema">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    
+                    <!-- Search Bar -->
+                    <div class="search-container">
+                        <form action="#" method="get" class="search-form" id="search-form">
+                            <input type="text" 
+                                   name="q" 
+                                   class="form-control search-input" 
+                                   placeholder="Buscar anime..." 
+                                   aria-label="Buscar anime">
+                            <button type="submit" class="btn btn-icon search-btn" aria-label="Buscar">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- User Actions (Login/Register temporarily disabled) -->
+                    <div class="user-auth">
+                        <!-- Authentication UI has been temporarily removed -->
+                    </div>
+
+                <!-- Mobile Menu Toggle -->
+                <button id="mobileMenuToggle" class="mobile-menu-toggle" aria-label="Menú">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-menu-header">
+                <div class="mobile-logo">
+                    <span class="logo-text">PYCTEM</span><span class="logo-highlight">.ANIME</span>
+                </div>
+                <button class="btn btn-icon mobile-close" id="mobileMenuClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="mobile-search">
+                <form action="#" method="get" class="search-form" id="mobile-search-form">
+                    <div class="input-group">
+                        <input type="text" 
+                               name="q" 
+                               class="form-control" 
+                               placeholder="Buscar anime..." 
+                               aria-label="Buscar anime">
+                        <button type="submit" class="btn btn-primary" aria-label="Buscar">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <nav class="mobile-nav">
+                <ul class="mobile-nav-list">
+                    <li class="nav-item">
+                        <a href="{% url 'anime:home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                            <i class="fas fa-home"></i> Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link {% if 'catalog' in request.path %}active{% endif %}">
+                            <i class="fas fa-list"></i> Catálogo
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-tags"></i> Géneros
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="fas fa-tv"></i> Nuevos Episodios
+                        </a>
+                    </li>
+                    
+                    <li class="nav-divider"><span>Tema</span></li>
+                    <li class="nav-item">
+                        <button id="mobile-theme-toggle" class="nav-link theme-toggle-btn">
+                            <i class="fas fa-moon"></i> Modo Oscuro
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="mobile-footer">
+                <div class="version">v1.0.0</div>
+                <div class="copyright"> PYCTEM.ANIME</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}
+        <!-- Content will be inserted here by child templates -->
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <span class="logo-text">PYCTEM</span><span class="logo-highlight">.ANIME</span>
+                </div>
+                <div class="footer-links">
+                    <a href="#">Términos de uso</a>
+                    <a href="#">Política de privacidad</a>
+                    <a href="#">Contacto</a>
+                </div>
+                <div class="footer-copyright">
+                    &copy; {% now "Y" %} PYCTEM.ANIME. Todos los derechos reservados.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    <!-- Service Worker Registration (temporarily disabled) -->
+    <!-- <script>
+        // Service worker registration will be implemented in a future update
+    </script> -->
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

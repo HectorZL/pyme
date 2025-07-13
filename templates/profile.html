@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mi Perfil - PYCTEM.ANIME{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Profile Header -->
+<header class="profile-header">
+    <div class="profile-header-content">
+        <img src="https://via.placeholder.com/150/ff0000/ffffff?text=US" alt="User Avatar" class="profile-avatar">
+        <div class="profile-info">
+            <h1>Nombre de Usuario</h1>
+            <div class="profile-meta">
+                <span><i class="fas fa-user-friends"></i> Miembro desde: Ene 2023</span>
+                <span><i class="fas fa-flag"></i> Argentina</span>
+                <span><i class="fas fa-star"></i> Nivel: 5</span>
+            </div>
+            <p>¡Bienvenido a tu perfil! Aquí puedes ver tu actividad y configurar tus preferencias.</p>
+            <div class="profile-actions">
+                <button class="btn btn-primary"><i class="fas fa-cog"></i> Editar Perfil</button>
+                <button class="btn btn-outline"><i class="fas fa-bell"></i> Notificaciones</button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Profile Tabs -->
+<div class="profile-tabs">
+    <div class="tabs-container">
+        <div class="tab active" data-tab="overview">Resumen</div>
+        <div class="tab" data-tab="watching">Viendo</div>
+        <div class="tab" data-tab="completed">Completados</div>
+        <div class="tab" data-tab="planning">Planificados</div>
+        <div class="tab" data-tab="favorites">Favoritos</div>
+        <div class="tab" data-tab="settings">Ajustes</div>
+    </div>
+</div>
+
+<!-- Tab Content -->
+<div class="container">
+    <!-- Overview Tab -->
+    <div id="overview" class="tab-content active">
+        <h2 class="section-title">Resumen de Actividad</h2>
+        
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">42</div>
+                <div class="stat-label">Días en la plataforma</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">156</div>
+                <div class="stat-label">Horas vistas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">24</div>
+                <div class="stat-label">Animes vistos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">8.7</div>
+                <div class="stat-label">Puntuación media</div>
+            </div>
+        </div>
+
+        <!-- Recently Watched -->
+        <h3 class="section-title">Recientemente Vistos</h3>
+        <div class="anime-list">
+            {% for i in "123456"|make_list %}
+            <div class="anime-item">
+                <img src="https://via.placeholder.com/300x400/ff0000/ffffff?text=Anime+{{ i }}" alt="Anime {{ i }}">
+                <div class="anime-item-info">
+                    <h4 class="anime-item-title">Título del Anime {{ i }}</h4>
+                    <div class="anime-item-meta">
+                        <span>Ep. {{ i|add:12 }}</span>
+                        <span>Hace {{ i }}d</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Watching Tab -->
+    <div id="watching" class="tab-content">
+        <h2 class="section-title">Viendo Actualmente</h2>
+        <div class="anime-list">
+            {% for i in "1234"|make_list %}
+            <div class="anime-item">
+                <img src="https://via.placeholder.com/300x400/ff0000/ffffff?text=Watching+{{ i }}" alt="Watching {{ i }}">
+                <div class="anime-item-info">
+                    <h4 class="anime-item-title">Anime en Progreso {{ i }}</h4>
+                    <div class="anime-item-meta">
+                        <span>Ep. {{ i|add:5 }}/24</span>
+                        <span>25%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" style="width: {{ i|add:2 }}0%;"></div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Favorites Tab -->
+    <div id="favorites" class="tab-content">
+        <h2 class="section-title">Animes Favoritos</h2>
+        <div class="anime-list">
+            {% for i in "1238"|make_list %}
+            <div class="anime-item">
+                <img src="https://via.placeholder.com/300x400/ff0000/ffffff?text=Fav+{{ i }}" alt="Favorite {{ i }}">
+                <div class="anime-item-info">
+                    <h4 class="anime-item-title">Anime Favorito {{ i }}</h4>
+                    <div class="anime-item-meta">
+                        <span>TV • 24 eps</span>
+                        <span><i class="fas fa-star" style="color: #ffc107;"></i> 9.{{ i }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="settings" class="tab-content">
+        <h2 class="section-title">Configuración de la Cuenta</h2>
+        <form class="settings-form">
+            <div class="form-group">
+                <label for="username">Nombre de Usuario</label>
+                <input type="text" id="username" class="form-control" value="UsuarioEjemplo">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Correo Electrónico</label>
+                <input type="email" id="email" class="form-control" value="usuario@ejemplo.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="bio">Biografía</label>
+                <textarea id="bio" class="form-control" rows="4" placeholder="Cuéntanos sobre ti...">Apasionado del anime desde pequeño. Mis géneros favoritos son shonen y seinen.</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Preferencias de Notificación</label>
+                <div class="notification-preferences">
+                    <label class="notification-option">
+                        <input type="checkbox" class="notification-checkbox" checked>
+                        Notificaciones por correo electrónico
+                    </label>
+                    <label class="notification-option">
+                        <input type="checkbox" class="notification-checkbox" checked>
+                        Notificaciones de nuevos episodios
+                    </label>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-save">Guardar Cambios</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Tab functionality
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Remove active class from all tabs and contents
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding content
+            this.classList.add('active');
+            const tabId = this.getAttribute('data-tab');
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
+
+    // Avatar upload preview
+    const avatarInput = document.createElement('input');
+    avatarInput.type = 'file';
+    avatarInput.accept = 'image/*';
+    avatarInput.style.display = 'none';
+    
+    document.querySelector('.profile-avatar').addEventListener('click', () => {
+        avatarInput.click();
+    });
+    
+    avatarInput.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                document.querySelector('.profile-avatar').src = event.target.result;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+</script>
+{% endblock %}

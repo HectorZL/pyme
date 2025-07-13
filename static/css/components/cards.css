@@ -1,0 +1,131 @@
+/* ==========================================================================
+   #CARDS
+   ========================================================================== */
+
+/**
+ * Base card styles
+ */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: var(--card-bg);
+  background-clip: border-box;
+  border: 1px solid var(--gray);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  transition: var(--transition);
+  overflow: hidden;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/**
+ * Card image
+ */
+.card-img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.card-img-top {
+  border-top-left-radius: calc(var(--border-radius) - 1px);
+  border-top-right-radius: calc(var(--border-radius) - 1px);
+}
+
+/**
+ * Card body
+ */
+.card-body {
+  flex: 1 1 auto;
+  padding: 1.25rem;
+}
+
+.card-title {
+  margin-bottom: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.card-text {
+  margin-bottom: 1rem;
+  color: var(--text-dark);
+  opacity: 0.9;
+}
+
+/**
+ * Card header and footer
+ */
+.card-header,
+.card-footer {
+  padding: 0.75rem 1.25rem;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid var(--gray);
+}
+
+.card-footer {
+  border-top: 1px solid var(--gray);
+  border-bottom: 0;
+  background-color: transparent;
+}
+
+/**
+ * Card variants
+ */
+.card-primary {
+  border-color: var(--primary);
+}
+
+.card-primary .card-header {
+  background-color: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+}
+
+/**
+ * Card hover effects
+ */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/**
+ * Card grid
+ */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  padding: 1.5rem 0;
+}
+
+/**
+ * Responsive adjustments
+ */
+@media (max-width: 768px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+}

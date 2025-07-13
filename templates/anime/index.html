@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}PYCTEM.ANIME - Inicio{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>Bienvenido a PYCTEM.ANIME</h1>
+        <p>Tu destino para ver los mejores animes en línea</p>
+        <a href="{% url 'anime:catalog' %}" class="btn btn-primary">Ver Catálogo</a>
+    </div>
+</section>
+
+<!-- Featured Anime Section -->
+<section class="featured-anime">
+    <div class="container">
+        <h2 class="section-title">Animes Destacados</h2>
+        <div class="anime-grid">
+            <!-- Anime content will be loaded here -->
+        </div>
+    </div>
+</section>
+
+<!-- New Episodes Section -->
+<section class="new-episodes">
+    <div class="container">
+        <h2 class="section-title">Nuevos Episodios</h2>
+        <div class="episodes-grid">
+            <!-- Episodes will be loaded here -->
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Catálogo de Animes - PYCTEM.ANIME{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/catalog.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Catalog Header -->
+<header class="catalog-header">
+    <div class="container">
+        <h1>Catálogo de Animes</h1>
+        <p>Descubre y explora nuestra amplia colección de animes</p>
+    </div>
+</header>
+
+<div class="container">
+    <!-- Filters Section -->
+    <div class="catalog-filters">
+        <div class="filter-group">
+            <h3>Géneros</h3>
+            <div class="filter-options">
+                <button class="filter-btn active">Todos</button>
+                <button class="filter-btn">Acción</button>
+                <button class="filter-btn">Aventura</button>
+                <button class="filter-btn">Comedia</button>
+                <button class="filter-btn">Drama</button>
+                <button class="filter-btn">Fantasía</button>
+                <button class="filter-btn">Misterio</button>
+                <button class="filter-btn">Romance</button>
+                <button class="filter-btn">Ciencia Ficción</button>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <h3>Año</h3>
+            <div class="filter-options">
+                <button class="filter-btn active">Todos</button>
+                <button class="filter-btn">2024</button>
+                <button class="filter-btn">2023</button>
+                <button class="filter-btn">2022</button>
+                <button class="filter-btn">2021-2010</button>
+                <button class="filter-btn">2009-2000</button>
+                <button class="filter-btn">90s</button>
+                <button class="filter-btn">80s</button>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <h3>Estado</h3>
+            <div class="filter-options">
+                <button class="filter-btn active">Todos</button>
+                <button class="filter-btn">En Emisión</button>
+                <button class="filter-btn">Finalizado</button>
+                <button class="filter-btn">Próximamente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sort Options -->
+    <div class="sort-options">
+        <select class="sort-select">
+            <option value="popular">Más Populares</option>
+            <option value="newest">Más Recientes</option>
+            <option value="rating">Mejor Valorados</option>
+            <option value="title">Título (A-Z)</option>
+        </select>
+    </div>
+
+    <!-- Anime Grid -->
+    <div class="catalog-grid">
+        <!-- Anime Card 1 -->
+        <div class="anime-card">
+            <img src="https://via.placeholder.com/300x400/ff0000/ffffff?text=Anime+1" alt="Anime 1" class="anime-img">
+            <div class="anime-info">
+                <h3 class="anime-title">Demon Slayer: Kimetsu no Yaiba</h3>
+                <div class="anime-meta">
+                    <span class="anime-type">TV</span>
+                    <span class="anime-rating">
+                        <i class="fas fa-star"></i> 9.2
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- More anime cards... -->
+        {% for i in "x"|rjust:"11" %}
+        <div class="anime-card">
+            <img src="https://via.placeholder.com/300x400/ff0000/ffffff?text=Anime+{{ forloop.counter|add:1 }}" alt="Anime {{ forloop.counter|add:1 }}" class="anime-img">
+            <div class="anime-info">
+                <h3 class="anime-title">Título del Anime {{ forloop.counter|add:1 }}</h3>
+                <div class="anime-meta">
+                    <span class="anime-type">TV</span>
+                    <span class="anime-rating">
+                        <i class="fas fa-star"></i> {{ forloop.counter|add:8.0 }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+        <a href="#">&laquo;</a>
+        <a href="#" class="current">1</a>
+        <a href="#">2</a>
+        <a href="#">3</a>
+        <a href="#">4</a>
+        <a href="#">5</a>
+        <a href="#">&raquo;</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Filter functionality
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const parent = this.parentElement;
+            parent.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Here you would typically filter the anime list
+            // For now, we'll just log the filter
+            console.log(`Filtered by: ${this.textContent}`);
+        });
+    });
+
+    // Sort functionality
+    document.querySelector('.sort-select').addEventListener('change', function() {
+        console.log(`Sorted by: ${this.value}`);
+        // Here you would typically sort the anime list
+    });
+</script>
+{% endblock %}
