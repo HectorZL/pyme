@@ -6,21 +6,39 @@
  * Global variables and theming
  */
 :root {
-  /* Colors */
-  --primary: #ff0000;        /* Main red color */
-  --primary-dark: #cc0000;   /* Darker red for hover states */
-  --primary-light: #ff3333;  /* Lighter red for accents */
-  --black: #000000;         /* Pure black */
-  --black-light: #1a1a1a;    /* Slightly lighter black */
-  --white: #ffffff;         /* Pure white */
-  --gray-light: #f5f5f5;    /* Light gray for backgrounds */
-  --gray: #e0e0e0;         /* Medium gray for borders */
-  --gray-dark: #666666;    /* Dark gray for secondary text */
+  /* Material 3 Color Palette */
+  --primary: #D32F2F;        /* Material Red 700 */
+  --primary-dark: #B71C1C;   /* Material Red 900 */
+  --primary-light: #EF5350;  /* Material Red 400 */
+  --primary-container: #FFDAD6; /* Material Red 50 */
+  --on-primary: #FFFFFF;     /* White text on primary */
+  --primary-transparent: rgba(211, 47, 47, 0.08); /* Primary with transparency */
   
-  /* Typography */
-  --text-light: #ffffff;   /* Text color for dark backgrounds */
-  --text-dark: #333333;    /* Text color for light backgrounds */
-  --font-primary: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  /* Modern gray palette */
+  --black: #2d2d2d;         /* Soft dark gray */
+  --black-light: #3d3d3d;   /* Slightly lighter gray */
+  --black-lighter: #4d4d4d;  /* Even lighter gray for hover states */
+  
+  /* Neutrals */
+  --white: #ffffff;
+  --off-white: #f8f9fa;
+  --gray-lightest: #f5f5f5;  /* Lightest gray for backgrounds */
+  --gray-lighter: #e0e0e0;   /* Light gray for borders */
+  --gray-light: #b0b0b0;     /* Light gray for secondary text */
+  --gray: #808080;           /* Medium gray */
+  --gray-dark: #606060;      /* Dark gray */
+  --gray-darker: #404040;    /* Darker gray for text */
+  
+  /* Text colors */
+  --text-primary: #333333;   /* Main text color */
+  --text-secondary: #666666; /* Secondary text */
+  --text-light: #f8f9fa;     /* Text on dark backgrounds */
+  
+  /* Typography - Material 3 */
+  --text-light: #FFFFFF;   /* Text color for dark backgrounds */
+  --text-dark: #1D1B20;    /* Text color for light backgrounds */
+  --font-primary: 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-display: 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-size-base: 1rem;  /* 16px */
   --line-height-base: 1.6;
   
@@ -47,17 +65,26 @@
 }
 
 /**
- * Dark theme
- */
+  /* Dark theme - Material 3 */
 [data-theme="dark"] {
-  --bg-light: #121212;
-  --bg-dark: #1e1e1e;
-  --card-bg: #1e1e1e;
-  --text-dark: #e0e0e0;
-  --text-light: #f5f5f5;
-  --gray: #444;
-  --gray-light: #2a2a2a;
-  --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  --bg-light: #1a1a1a;         /* Dark gray background */
+  --bg-dark: #262626;          /* Slightly lighter than bg-light */
+  --card-bg: #2d2d2d;          /* Card background */
+  --text-dark: #f0f0f0;        /* Light gray text */
+  --text-light: #ffffff;       /* White text */
+  --gray: #4d4d4d;             /* Medium gray for borders */
+  --gray-light: #3d3d3d;       /* Slightly lighter gray */
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); /* Softer shadow */
+  
+  /* Custom dark theme variables */
+  --header-bg: rgba(30, 30, 30, 0.95); /* Slightly transparent header */
+  --header-border: rgba(255, 26, 26, 0.2); /* Subtle red border */
+  --nav-hover-bg: rgba(255, 26, 26, 0.1); /* Subtle red on hover */
+  --nav-active-bg: rgba(255, 26, 26, 0.2); /* More visible red for active */
+  
+  /* Text colors for dark theme */
+  --text-primary: #f0f0f0;     /* Main text color */
+  --text-secondary: #b0b0b0;   /* Secondary text */
 }
 
 /**
@@ -78,6 +105,9 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Import Roboto font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
 body {
   font-family: var(--font-primary);
   font-size: var(--font-size-base);
@@ -89,6 +119,8 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-weight: 400;
+  letter-spacing: 0.5px;
 }
 
 /* Typography */

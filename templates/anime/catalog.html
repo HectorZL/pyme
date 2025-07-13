@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}PYCTEM.ANIME - Catálogo{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/catalog.css' %}?v=1.0.1">
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="catalog-hero">
+    <div class="hero-background">
+        <div class="hero-overlay"></div>
+        <div class="hero-particles" id="particles-js"></div>
+    </div>
+    <div class="container">
+        <div class="hero-content text-center">
+            <h1 class="hero-title">Catálogo de <span class="text-gradient">Anime</span></h1>
+            <p class="hero-subtitle">Descubre y explora nuestra amplia colección de animes</p>
+            
+            <!-- Search and Filter Bar -->
+            <div class="catalog-search-container">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Buscar animes...">
+                    <button class="search-btn">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+                
+                <div class="filter-toggle">
+                    <button class="btn btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse" aria-expanded="false" aria-controls="filtersCollapse">
+                        <i class="fas fa-sliders-h me-2"></i> Filtros
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Filters Panel -->
+            <div class="collapse" id="filtersCollapse">
+                <div class="filters-panel">
+                    <div class="filter-group">
+                        <h4 class="filter-title">Géneros</h4>
+                        <div class="filter-tags">
+                            <button class="filter-tag active">Todos</button>
+                            <button class="filter-tag">Acción</button>
+                            <button class="filter-tag">Aventura</button>
+                            <button class="filter-tag">Comedia</button>
+                            <button class="filter-tag">Drama</button>
+                            <button class="filter-tag">Fantasía</button>
+                            <button class="filter-tag">Romance</button>
+                            <button class="filter-tag">Ciencia Ficción</button>
+                            <button class="filter-tag">Sobrenatural</button>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <h4 class="filter-title">Año</h4>
+                        <div class="filter-tags">
+                            <button class="filter-tag active">Todos</button>
+                            <button class="filter-tag">2024</button>
+                            <button class="filter-tag">2023</button>
+                            <button class="filter-tag">2022</button>
+                            <button class="filter-tag">2021-2020</button>
+                            <button class="filter-tag">2019-2010</button>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <h4 class="filter-title">Tipo</h4>
+                        <div class="filter-tags">
+                            <button class="filter-tag active">Todos</button>
+                            <button class="filter-tag">TV</button>
+                            <button class="filter-tag">Película</button>
+                            <button class="filter-tag">OVA</button>
+                            <button class="filter-tag">Especial</button>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-actions">
+                        <button class="btn btn-outline-light me-2">
+                            <i class="fas fa-times me-2"></i>Limpiar filtros
+                        </button>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-check me-2"></i>Aplicar filtros
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content -->
+<main class="catalog-main">
+    <div class="container">
+        <!-- Sort and View Options -->
+        <div class="catalog-header">
+            <div class="results-count">
+                Mostrando <span class="fw-bold">1-24</span> de <span class="fw-bold">1,245</span> resultados
+            </div>
+            
+            <div class="view-options">
+                <div class="sort-by">
+                    <label for="sortSelect" class="form-label">Ordenar por:</label>
+                    <select class="form-select" id="sortSelect">
+                        <option value="popularity">Popularidad</option>
+                        <option value="latest">Más recientes</option>
+                        <option value="rating">Mejor valorados</option>
+                        <option value="az">A-Z</option>
+                    </select>
+                </div>
+                
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="grid" title="Vista de cuadrícula">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                    <button class="view-btn" data-view="list" title="Vista de lista">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Anime Grid -->
+        <div class="anime-grid" id="animeGrid">
+            <!-- Anime items will be dynamically loaded here -->
+            {% for i in "x"|rjust:"24" %}
+            <div class="anime-card">
+                <div class="anime-card-inner">
+                    <div class="anime-poster">
+                        <img src="https://via.placeholder.com/300x450/1a1a2e/ffffff?text=Anime+Poster" alt="Anime Title" class="img-fluid">
+                        <div class="anime-overlay">
+                            <div class="anime-rating">
+                                <i class="fas fa-star"></i> 8.7
+                            </div>
+                            <div class="anime-actions">
+                                <button class="btn-action" title="Añadir a lista">
+                                    <i class="far fa-bookmark"></i>
+                                </button>
+                                <button class="btn-action" title="Ver detalles">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="anime-info">
+                        <h3 class="anime-title">Título del Anime Largo que Podría Ocupar Dos Líneas</h3>
+                        <div class="anime-meta">
+                            <span class="anime-type">TV</span>
+                            <span class="anime-year">2023</span>
+                            <span class="anime-episodes">12 Episodios</span>
+                        </div>
+                        <div class="anime-genres">
+                            <span class="genre-tag">Acción</span>
+                            <span class="genre-tag">Aventura</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        <nav aria-label="Paginación de animes" class="mt-5">
+            <ul class="pagination justify-content-center">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item">
+                    <span class="page-link">...</span>
+                </li>
+                <li class="page-item"><a class="page-link" href="#">24</a></li>
+                <li class="page-item">
+                    <a class="page-link" href="#">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</main>
+
+<!-- Quick View Modal -->
+<div class="modal fade" id="quickViewModal" tabindex="-1" aria-labelledby="quickViewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="quick-view-content">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <div class="quick-view-poster">
+                                <img src="https://via.placeholder.com/400x600/1a1a2e/ffffff?text=Anime+Poster" alt="Anime Title" class="img-fluid">
+                                <div class="quick-view-actions">
+                                    <button class="btn btn-primary btn-lg w-100 mb-3">
+                                        <i class="fas fa-play me-2"></i> Ver Ahora
+                                    </button>
+                                    <button class="btn btn-outline-light w-100">
+                                        <i class="far fa-bookmark me-2"></i> Añadir a Lista
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="quick-view-details">
+                                <h2 class="quick-view-title">Título del Anime</h2>
+                                <div class="quick-view-meta mb-4">
+                                    <span class="badge bg-primary me-2">TV</span>
+                                    <span class="me-3"><i class="fas fa-calendar-alt me-1"></i> 2023</span>
+                                    <span class="me-3"><i class="fas fa-star text-warning me-1"></i> 8.7</span>
+                                    <span class="me-3"><i class="fas fa-play-circle me-1"></i> 12 Episodios</span>
+                                </div>
+                                
+                                <div class="quick-view-genres mb-4">
+                                    <span class="badge bg-dark me-2 mb-2">Acción</span>
+                                    <span class="badge bg-dark me-2 mb-2">Aventura</span>
+                                    <span class="badge bg-dark me-2 mb-2">Fantasía</span>
+                                </div>
+                                
+                                <div class="quick-view-description mb-4">
+                                    <h5 class="mb-3">Sinopsis</h5>
+                                    <p>Una emocionante historia de aventuras que sigue a un grupo de héroes en su viaje épico para salvar el mundo de la oscuridad inminente. Con personajes memorables, batallas espectaculares y giros inesperados, esta serie te mantendrá al borde de tu asiento.</p>
+                                </div>
+                                
+                                <div class="quick-view-stats row g-3">
+                                    <div class="col-6 col-md-4">
+                                        <div class="stat-item">
+                                            <div class="stat-label">Estado</div>
+                                            <div class="stat-value">En Emisión</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="stat-item">
+                                            <div class="stat-label">Estudio</div>
+                                            <div class="stat-value">Studio Name</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="stat-item">
+                                            <div class="stat-label">Duración</div>
+                                            <div class="stat-value">24 min/ep</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="stat-item">
+                                            <div class="stat-label">Tipo</div>
+                                            <div class="stat-value">TV Series</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="stat-item">
+                                            <div class="stat-label">Calificación</div>
+                                            <div class="stat-value">+16</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/catalog.js' %}"></script>
+{% endblock %}

@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="PYCTEM.ANIME - Tu plataforma para ver y descubrir anime">
-    <meta name="theme-color" content="#000000">
-    <title>{% block title %}PYCTEM.ANIME{% endblock %}</title>
+    <meta name="description" content="el pyme anime - Tu plataforma para ver y descubrir anime">
+    <meta name="theme-color" content="#D32F2F">
+    <title>{% block title %}el pyme anime{% endblock %}</title>
     
     <!-- Favicon -->
     <link rel="icon" href="{% static 'images/favicon.ico' %}">
@@ -74,7 +74,7 @@
             <!-- Logo -->
             <div class="logo-container">
                 <a href="{% url 'anime:home' %}" class="logo">
-                    <span class="logo-text">PYCTEM</span><span class="logo-highlight">.ANIME</span>
+                    <span class="logo-text">el pyme</span><span class="logo-highlight">anime</span>
                 </a>
             </div>
 
@@ -88,15 +88,17 @@
                 
                 <!-- Navigation Links -->
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav">
+                    <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a href="{% url 'anime:home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">
-                                <i class="fas fa-home"></i> Inicio
+                            <a href="{% url 'anime:home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}" 
+                               title="Página de inicio">
+                                <i class="fas fa-home me-1"></i> Inicio
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{% url 'anime:catalog' %}" class="nav-link {% if 'catalog' in request.path %}active{% endif %}">
-                                <i class="fas fa-list"></i> Catálogo
+                            <a href="{% url 'anime:catalog' %}" class="nav-link {% if 'catalog' in request.path %}active{% endif %}"
+                               title="Explorar catálogo de anime">
+                                <i class="fas fa-list me-1"></i> Catálogo
                             </a>
                         </li>
                         <li class="nav-item">
@@ -110,110 +112,49 @@
                             </a>
                         </li>
                     </ul>
-                </div>
-            </nav>
-
-            <!-- User Actions and Theme Toggle -->
-            <div class="user-actions">
-                <div class="header-actions">
-                    <!-- Theme Toggle -->
-                    <button id="theme-toggle" class="btn btn-icon btn-outline" aria-label="Toggle theme" title="Cambiar tema">
-                        <i class="fas fa-moon"></i>
-                    </button>
                     
-                    <!-- Search Bar -->
-                    <div class="search-container">
-                        <form action="#" method="get" class="search-form" id="search-form">
-                            <input type="text" 
-                                   name="q" 
-                                   class="form-control search-input" 
-                                   placeholder="Buscar anime..." 
-                                   aria-label="Buscar anime">
-                            <button type="submit" class="btn btn-icon search-btn" aria-label="Buscar">
+                    <!-- Search and User Actions -->
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- Search Bar -->
+                        <div class="search-container position-relative">
+                            <input type="text" id="search-input" class="form-control ps-4" 
+                                   placeholder="Buscar anime..." aria-label="Buscar anime">
+                            <button id="search-button" class="btn btn-link position-absolute end-0 top-50 translate-middle-y me-2" 
+                                    type="button" title="Buscar">
                                 <i class="fas fa-search"></i>
                             </button>
-                        </form>
+                        </div>
+                        
+                        <!-- Theme Toggle -->
+                        <button id="theme-toggle" class="btn btn-outline-secondary rounded-circle p-2" 
+                                type="button" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        
+                        <!-- Coming Soon: User Authentication -->
+                        <div class="coming-soon-auth">
+                            <button class="btn btn-outline-secondary rounded-pill px-3 py-2"
+                                    type="button"
+                                    title="Próximamente: Inicio de sesión"
+                                    disabled>
+                                <i class="fas fa-user-lock me-2"></i>
+                                <span class="d-none d-md-inline">Iniciar sesión</span>
+                            </button>
+                        </div>
                     </div>
-                    
-                    <!-- User Actions (Login/Register temporarily disabled) -->
-                    <div class="user-auth">
-                        <!-- Authentication UI has been temporarily removed -->
-                    </div>
-
-                <!-- Mobile Menu Toggle -->
-                <button id="mobileMenuToggle" class="mobile-menu-toggle" aria-label="Menú">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Mobile Menu -->
-        <div class="mobile-menu" id="mobileMenu">
-            <div class="mobile-menu-header">
-                <div class="mobile-logo">
-                    <span class="logo-text">PYCTEM</span><span class="logo-highlight">.ANIME</span>
                 </div>
-                <button class="btn btn-icon mobile-close" id="mobileMenuClose">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="mobile-search">
-                <form action="#" method="get" class="search-form" id="mobile-search-form">
-                    <div class="input-group">
-                        <input type="text" 
-                               name="q" 
-                               class="form-control" 
-                               placeholder="Buscar anime..." 
-                               aria-label="Buscar anime">
-                        <button type="submit" class="btn btn-primary" aria-label="Buscar">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </form>
-            </div>
-            
-            <nav class="mobile-nav">
-                <ul class="mobile-nav-list">
-                    <li class="nav-item">
-                        <a href="{% url 'anime:home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">
-                            <i class="fas fa-home"></i> Inicio
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link {% if 'catalog' in request.path %}active{% endif %}">
-                            <i class="fas fa-list"></i> Catálogo
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-tags"></i> Géneros
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-tv"></i> Nuevos Episodios
-                        </a>
-                    </li>
-                    
-                    <li class="nav-divider"><span>Tema</span></li>
-                    <li class="nav-item">
-                        <button id="mobile-theme-toggle" class="nav-link theme-toggle-btn">
-                            <i class="fas fa-moon"></i> Modo Oscuro
-                        </button>
-                    </li>
-                </ul>
             </nav>
             
-            <div class="mobile-footer">
-                <div class="version">v1.0.0</div>
-                <div class="copyright"> PYCTEM.ANIME</div>
-            </div>
+            
         </div>
+
+        
+        
+        
     </header>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content" style="margin: 0; padding: 0;">
         {% block content %}
         <!-- Content will be inserted here by child templates -->
         {% endblock %}
@@ -221,18 +162,17 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="container">
+        <div class="container-fluid px-0">
             <div class="footer-content">
-                <div class="footer-logo">
-                    <span class="logo-text">PYCTEM</span><span class="logo-highlight">.ANIME</span>
-                </div>
-                <div class="footer-links">
-                    <a href="#">Términos de uso</a>
-                    <a href="#">Política de privacidad</a>
-                    <a href="#">Contacto</a>
-                </div>
-                <div class="footer-copyright">
-                    &copy; {% now "Y" %} PYCTEM.ANIME. Todos los derechos reservados.
+                <div class="footer-bottom">
+                    <div class="footer-copyright">
+                        &copy; {% now "Y" %} el pyme anime. Todos los derechos reservados.
+                    </div>
+                    <div class="footer-legal">
+                        <a href="#">Términos</a>
+                        <span class="divider">•</span>
+                        <a href="#">Privacidad</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -241,6 +181,62 @@
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+      // Initialize particles.js if element exists
+      document.addEventListener('DOMContentLoaded', function() {
+        const particlesEl = document.getElementById('particles-js');
+        if (particlesEl) {
+          particlesJS('particles-js', {
+            particles: {
+              number: { value: 80, density: { enable: true, value_area: 800 } },
+              color: { value: '#d32f2f' },
+              shape: { type: 'circle' },
+              opacity: {
+                value: 0.5,
+                random: true,
+                anim: { enable: true, speed: 1, opacity_min: 0.1, sync: false }
+              },
+              size: {
+                value: 3,
+                random: true,
+                anim: { enable: true, speed: 2, size_min: 0.1, sync: false }
+              },
+              line_linked: {
+                enable: true,
+                distance: 150,
+                color: '#d32f2f',
+                opacity: 0.4,
+                width: 1
+              },
+              move: {
+                enable: true,
+                speed: 1,
+                direction: 'none',
+                random: false,
+                straight: false,
+                out_mode: 'out',
+                bounce: false,
+                attract: { enable: false, rotateX: 600, rotateY: 1200 }
+              }
+            },
+            interactivity: {
+              detect_on: 'canvas',
+              events: {
+                onhover: { enable: true, mode: 'grab' },
+                onclick: { enable: true, mode: 'push' },
+                resize: true
+              },
+              modes: {
+                grab: { distance: 140, line_linked: { opacity: 1 } },
+                push: { particles_nb: 4 }
+              }
+            },
+            retina_detect: true
+          });
+        }
+      });
+    </script>
     <script src="{% static 'js/main.js' %}"></script>
     <!-- Service Worker Registration (temporarily disabled) -->
     <!-- <script>

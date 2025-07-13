@@ -3,17 +3,24 @@
    ========================================================================== */
 
 /**
- * 1. Import base styles and variables
+ * 1. Import global styles and variables
+ */
+@import 'components/global.css';
+
+/**
+ * 2. Import base styles and variables
  */
 @import 'base.css';
 
 /**
- * 2. Import component styles
+ * 3. Import component styles
  */
 @import 'components/buttons.css';
 @import 'components/cards.css';
 @import 'components/forms.css';
-@import 'components/navigation.css';
+@import 'components/header.css';
+@import 'components/hero.css';
+@import 'components/footer.css';
 
 /**
  * 3. Import page-specific styles
@@ -43,24 +50,7 @@
   background-color: var(--bg-light);
 }
 
-/* ==========================================================================
-   #HEADER STYLES
-   ========================================================================== */
-
-.header {
-  background-color: var(--black);
-  padding: 1rem 0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  position: sticky;
-  top: 0;
-  z-index: var(--z-index-sticky);
-}
-
-.header-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+/* Header styles have been moved to components/header.css */
 
 /* ==========================================================================
    #FOOTER STYLES
@@ -173,28 +163,7 @@
   width: 100%;
 }
 
-/* Hero Section */
-.hero {
-  background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), 
-              url('https://via.placeholder.com/1920x800') center/cover no-repeat;
-  color: var(--white);
-  text-align: center;
-  padding: 8rem 2rem;
-  margin-bottom: 3rem;
-}
-
-.hero h1 {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.hero p {
-  font-size: 1.2rem;
-  max-width: 700px;
-  margin: 0 auto 2rem;
-  opacity: 0.9;
-}
+/* Hero styles have been moved to components/hero.css */
 
 /* Buttons */
 .btn {

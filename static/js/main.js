@@ -4,15 +4,97 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Mobile Menu Toggle
+    // Header scroll effect
+    const header = document.querySelector('.header');
+    let lastScroll = 0;
+    
+    function handleScroll() {
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll <= 0) {
+            header.classList.remove('scrolled', 'scroll-up');
+            return;
+        }
+        
+        if (currentScroll > lastScroll && !header.classList.contains('scroll-down')) {
+            // Scroll Down
+            header.classList.remove('scroll-up');
+            header.classList.add('scroll-down');
+        } else if (currentScroll < lastScroll && header.classList.contains('scroll-down')) {
+            // Scroll Up
+            header.classList.remove('scroll-down');
+            header.classList.add('scroll-up');
+        }
+        
+        if (currentScroll > 100) {
+            header.classList.add('scrolled');
+        } else {
+            header.classList.remove('scrolled');
+        }
+        
+        lastScroll = currentScroll;
+    }
+    
+    // Initialize scroll effect
+    window.addEventListener('scroll', throttle(handleScroll, 100));
+    
+    // Mobile Menu Elements
     const mobileMenu = document.getElementById('mobileMenu');
+    const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
     const mobileMenuToggle = document.querySelector('.navbar-toggler');
     const mobileMenuClose = document.getElementById('mobileMenuClose');
+    const mobileMenuLinks = document.querySelectorAll('.mobile-nav .nav-link');
     
     // Toggle mobile menu
     function toggleMobileMenu() {
+        const isOpening = !mobileMenu.classList.contains('active');
+        
+        // Toggle menu and overlay
         mobileMenu.classList.toggle('active');
+        mobileMenuOverlay.classList.toggle('active');
         document.body.classList.toggle('menu-open');
+        
+        // Toggle aria-expanded for accessibility
+        const isExpanded = mobileMenuToggle.getAttribute('aria-expanded') === 'true' || false;
+        mobileMenuToggle.setAttribute('aria-expanded', !isExpanded);
+        
+        // Prevent body scroll when menu is open
+        if (isOpening) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        
+        // Add/remove event listeners for overlay click
+        if (isOpening) {
+            mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            document.addEventListener('keydown', handleEscapeKey);
+        } else {
+            mobileMenuOverlay.removeEventListener('click', closeMobileMenu);
+            document.removeEventListener('keydown', handleEscapeKey);
+        }
+    }
+    
+    // Close mobile menu
+    function closeMobileMenu() {
+        if (mobileMenu.classList.contains('active')) {
+            mobileMenu.classList.remove('active');
+            mobileMenuOverlay.classList.remove('active');
+            document.body.classList.remove('menu-open');
+            document.body.style.overflow = '';
+            mobileMenuToggle.setAttribute('aria-expanded', 'false');
+            
+            // Remove event listeners
+            mobileMenuOverlay.removeEventListener('click', closeMobileMenu);
+            document.removeEventListener('keydown', handleEscapeKey);
+        }
+    }
+    
+    // Handle escape key press
+    function handleEscapeKey(e) {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            closeMobileMenu();
+        }
     }
     
     // Event listeners for mobile menu
@@ -25,11 +107,80 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Close mobile menu when clicking on a nav link
-    const mobileNavLinks = document.querySelectorAll('.mobile-nav .nav-link');
-    mobileNavLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            mobileMenu.classList.remove('active');
-            document.body.classList.remove('menu-open');
+    mobileMenuLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            // Don't close if it's a dropdown toggle
+            if (link.classList.contains('dropdown-toggle')) {
+                e.preventDefault();
+                const parent = link.closest('.nav-item');
+                const dropdown = parent.querySelector('.dropdown-menu');
+                if (dropdown) {
+                    dropdown.classList.toggle('show');
+                    link.setAttribute('aria-expanded', 
+                        link.getAttribute('aria-expanded') === 'true' ? 'false' : 'true'
+                    );
+                }
+                return;
+            }
+            
+            // Close the menu
+            closeMobileMenu();
+            
+            // Smooth scroll to section if it's an anchor link
+            const targetId = link.getAttribute('href');
+            if (targetId && targetId.startsWith('#')) {
+                e.preventDefault();
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    // Small delay to allow menu to close before scrolling
+                    setTimeout(() => {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - header.offsetHeight,
+                            behavior: 'smooth'
+                        });
+                    }, 300);
+                }
+            }
+        });
+    });
+    
+    // Close mobile menu when clicking on overlay
+    mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+    
+    // Close mobile menu when viewport is resized to desktop
+    function handleResize() {
+        if (window.innerWidth >= 992) { // Match your desktop breakpoint
+            closeMobileMenu();
+        }
+    }
+    
+    // Add resize event listener
+    window.addEventListener('resize', debounce(handleResize, 250));
+    
+    // Close mobile menu when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+        if (mobileMenu.classList.contains('active') && 
+            !e.target.closest('.mobile-menu') && 
+            !e.target.closest('.navbar-toggler')) {
+            closeMobileMenu();
+        }
+    });
+    
+    // Add smooth scrolling to all links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+            
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                window.scrollTo({
+                    top: targetElement.offsetTop - header.offsetHeight,
+                    behavior: 'smooth'
+                });
+            }
         });
     });
     

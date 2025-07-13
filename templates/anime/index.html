@@ -1,34 +1,24 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}PYCTEM.ANIME - Inicio{% endblock %}
+{% block title %}el pyme anime - Inicio{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
 <section class="hero">
-    <div class="hero-content">
-        <h1>Bienvenido a PYCTEM.ANIME</h1>
-        <p>Tu destino para ver los mejores animes en línea</p>
-        <a href="{% url 'anime:catalog' %}" class="btn btn-primary">Ver Catálogo</a>
-    </div>
-</section>
-
-<!-- Featured Anime Section -->
-<section class="featured-anime">
+    <div class="hero-particles" id="particles-js"></div>
     <div class="container">
-        <h2 class="section-title">Animes Destacados</h2>
-        <div class="anime-grid">
-            <!-- Anime content will be loaded here -->
-        </div>
-    </div>
-</section>
-
-<!-- New Episodes Section -->
-<section class="new-episodes">
-    <div class="container">
-        <h2 class="section-title">Nuevos Episodios</h2>
-        <div class="episodes-grid">
-            <!-- Episodes will be loaded here -->
+        <div class="hero-content">
+            <div class="hero-text">
+                <span class="hero-subtitle">Bienvenido a</span>
+                <h1 class="hero-title">el pyme <span class="text-primary">anime</span></h1>
+                <p class="hero-description">Tu plataforma favorita para descubrir y disfrutar de los mejores animes en línea. Series clásicas, estrenos y mucho más en un solo lugar.</p>
+                <div class="hero-cta">
+                    <a href="{% url 'anime:catalog' %}" class="btn btn-primary btn-lg btn-explore">
+                        <i class="fas fa-play-circle me-2"></i> Explorar Catálogo
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </section>

@@ -1,0 +1,283 @@
+/* ==========================================================================
+   #HEADER STYLES - CLEAN NAVBAR DESIGN
+   ========================================================================== */
+
+:root {
+  --header-bg: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%); /* Gradient background */
+  --header-height: 70px;
+  --search-bg: rgba(255, 255, 255, 0.1);
+  --search-text: #ffffff;
+  --search-placeholder: rgba(255, 255, 255, 0.7);
+  --nav-link-color: #ffffff; /* White text for nav links */
+  --nav-link-hover: #ffffff; /* White on hover */
+  --nav-bg-hover: rgba(255, 255, 255, 0.15); /* Slightly more visible hover effect */
+  --border-radius: 6px;
+  --transition: all 0.3s ease;
+}
+
+/* Header Container */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: var(--header-bg);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Logo Styles */
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.logo-text {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-right: 0.25rem;
+}
+
+.logo-highlight {
+  color: #3a86ff;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.japanese-text {
+  color: #a0a0a0;
+  font-size: 0.9rem;
+  margin-left: 0.5rem;
+  transform: translateY(2px);
+}
+
+/* Navigation */
+.navbar {
+  flex-grow: 1;
+  margin: 0 2rem;
+}
+
+.navbar-nav {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 1rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+}
+
+.nav-link {
+  color: var(--nav-link-color);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: var(--transition);
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+  text-transform: uppercase;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-link:hover,
+.nav-link:hover {
+  color: var(--nav-link-hover);
+  background-color: var(--nav-bg-hover);
+  transform: translateY(-1px);
+}
+
+.nav-link i {
+  font-size: 1rem;
+}
+
+/* Search Bar */
+.search-container {
+  max-width: 300px;
+  margin: 0 1rem;
+  position: relative;
+  flex-grow: 1;
+}
+
+#search-input {
+  width: 100%;
+  padding: 0.5rem 2.5rem 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  border: 1px solid #3a3a3a;
+  background-color: var(--search-bg);
+  color: var(--search-text);
+  font-size: 0.9rem;
+  transition: var(--transition);
+}
+
+#search-input:focus {
+  outline: none;
+  border-color: var(--nav-link-hover);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+#search-input::placeholder {
+  color: var(--search-placeholder);
+  font-size: 0.9rem;
+}
+
+#search-button {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--search-placeholder);
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: var(--transition);
+}
+
+#search-button:hover {
+  color: var(--nav-link-hover);
+}
+
+/* User Actions */
+.d-flex.align-items-center.gap-3 {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Theme Toggle */
+#theme-toggle {
+  color: var(--nav-link-color);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+#theme-toggle:hover {
+  background: var(--nav-bg-hover);
+  color: var(--nav-link-hover);
+}
+
+/* Login Button */
+.coming-soon-auth .btn {
+  background-color: transparent;
+  color: var(--nav-link-color);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: var(--transition);
+  padding: 0.5rem 1.2rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.coming-soon-auth .btn:hover {
+  background: var(--nav-bg-hover);
+  color: var(--nav-link-hover);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Mobile Menu Toggle */
+.mobile-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  margin-left: 1rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+  .search-container {
+    margin: 0 1rem;
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0 1rem;
+  }
+  
+  .main-nav {
+    display: none;
+  }
+  
+  .search-container {
+    display: none;
+  }
+  
+  .user-actions {
+    margin-left: auto;
+  }
+  
+  .mobile-menu-toggle {
+    display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-text,
+  .logo-highlight {
+    font-size: 1.25rem;
+  }
+  
+  .japanese-text {
+    font-size: 0.8rem;
+  }
+  
+  .login-button span {
+    display: none;
+  }
+  
+  .login-button {
+    padding: 0.6rem;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+  }
+}
