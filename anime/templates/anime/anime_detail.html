@@ -171,22 +171,34 @@
                     <div class="card-body">
                         <h5 class="card-title">Animes Relacionados</h5>
                         <div class="row">
-                            {% for related in anime.genres.first.animes.exclude(id=anime.id)|slice:":4" %}
-                                <div class="col-6 col-sm-4 col-lg-6 mb-3">
-                                    <a href="{{ related.get_absolute_url }}" class="text-decoration-none">
-                                        {% if related.image %}
-                                            <img src="{{ related.image.url }}" class="img-fluid rounded mb-1" alt="{{ related.title }}">
-                                        {% else %}
-                                            <div class="no-image-placeholder small">
-                                                <i class="fas fa-image"></i>
+                            {% if anime.genres.exists %}
+                                {% with genre=anime.genres.first %}
+                                    {% for related in genre.anime_set.all|slice:":4" %}
+                                        {% if related.id != anime.id %}
+                                            <div class="col-6 col-sm-4 col-lg-6 mb-3">
+                                                <a href="{% url 'anime:anime_detail' related.slug %}" class="text-decoration-none">
+                                                    {% if related.image %}
+                                                        <img src="{{ related.image.url }}" class="img-fluid rounded mb-1" alt="{{ related.title }}">
+                                                    {% else %}
+                                                        <div class="no-image-placeholder small">
+                                                            <i class="fas fa-image"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div class="small text-truncate">{{ related.title }}</div>
+                                                </a>
                                             </div>
                                         {% endif %}
-                                        <div class="small text-truncate">{{ related.title }}</div>
-                                    </a>
+                                    {% empty %}
+                                        <div class="col-12">
+                                            <p class="text-muted small mb-0">No se encontraron animes relacionados.</p>
+                                        </div>
+                                    {% endfor %}
+                                {% endwith %}
+                            {% else %}
+                                <div class="col-12">
+                                    <p class="text-muted small mb-0">No hay géneros disponibles para mostrar animes relacionados.</p>
                                 </div>
-                            {% empty %}
-                                <p class="text-muted small">No hay animes relacionados.</p>
-                            {% endfor %}
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -239,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFTTOKEN': '{{ csrf_token }}'
+                    'X-CSRFTOKEN': '{{ csrf_token }}'
                 },
                 body: `anime_id=${animeId}&status=${status}`
             })
