@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mi Lista de Anime - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/user_anime_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Mi Lista de Anime</h1>
+        <div class="btn-group">
+            <a href="{% url 'anime:catalog' %}" class="btn btn-outline-primary">
+                <i class="fas fa-plus me-1"></i> Añadir más animes
+            </a>
+        </div>
+    </div>
+    
+    <!-- Status Tabs -->
+    <ul class="nav nav-tabs mb-4" id="statusTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if active_status == 'watching' or not active_status %}active{% endif %}" 
+                    id="watching-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#watching" 
+                    type="button" 
+                    role="tab" 
+                    aria-controls="watching" 
+                    aria-selected="{% if active_status == 'watching' or not active_status %}true{% else %}false{% endif %}">
+                <i class="fas fa-tv me-1"></i> Viendo
+                <span class="badge bg-primary ms-1">{{ status_counts.watching|default:0 }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if active_status == 'completed' %}active{% endif %}" 
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab" aria-controls="completed" aria-selected="false">
+                <i class="fas fa-check-circle me-1"></i> Completados <span class="badge bg-success">{{ status_counts.completed }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="on-hold-tab" data-bs-toggle="tab" data-bs-target="#on-hold" type="button" role="tab" aria-controls="on-hold" aria-selected="false">
+                <i class="fas fa-pause-circle me-1"></i> En Pausa <span class="badge bg-warning text-dark">{{ status_counts.on_hold }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="dropped-tab" data-bs-toggle="tab" data-bs-target="#dropped" type="button" role="tab" aria-controls="dropped" aria-selected="false">
+                <i class="fas fa-times-circle me-1"></i> Abandonados <span class="badge bg-danger">{{ status_counts.dropped }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="plan-to-watch-tab" data-bs-toggle="tab" data-bs-target="#plan-to-watch" type="button" role="tab" aria-controls="plan-to-watch" aria-selected="false">
+                <i class="fas fa-bookmark me-1"></i> Por Ver <span class="badge bg-secondary">{{ status_counts.plan_to_watch }}</span>
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="animeListContent">
+        <!-- All Tab -->
+        <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
+            {% if anime_list %}
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+                    {% for item in anime_list %}
+                        {% with anime=item.anime %}
+                            {% include 'anime/partials/anime_card.html' with status=item.status %}
+                        {% endwith %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5 empty-list">
+                    <div class="empty-list-icon mb-3">
+                        <i class="far fa-folder-open fa-4x text-muted"></i>
+                    </div>
+                    <h4 class="text-muted">Tu lista está vacía</h4>
+                    <p class="text-muted">¡Explora el catálogo y comienza a añadir animes a tu lista!</p>
+                    <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-2">
+                        <i class="fas fa-search me-1"></i> Explorar Catálogo
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Other Tabs - Initially Empty, Loaded via AJAX -->
+        <div class="tab-pane fade" id="watching" role="tabpanel" aria-labelledby="watching-tab">
+            <div class="text-center py-5" id="watching-loading">
+                <div class="spinner-border text-info" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4" id="watching-content">
+                <!-- Content will be loaded via AJAX -->
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="completed" role="tabpanel" aria-labelledby="completed-tab">
+            <div class="text-center py-5" id="completed-loading">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4" id="completed-content">
+                <!-- Content will be loaded via AJAX -->
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="on-hold" role="tabpanel" aria-labelledby="on-hold-tab">
+            <div class="text-center py-5" id="on-hold-loading">
+                <div class="spinner-border text-warning" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4" id="on-hold-content">
+                <!-- Content will be loaded via AJAX -->
+            </div>
+                    {% include 'anime/partials/anime_grid.html' %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-times-circle fa-4x text-muted mb-3"></i>
+                        <h4>No has abandonado ningún anime</h4>
+                        <p class="text-muted">¡Sigue así! O si decides abandonar un anime, márcalo como abandonado.</p>
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </div>
+        
+        <!-- Plan to Watch Tab -->
+        <div class="tab-pane fade {% if active_status == 'plan_to_watch' %}show active{% endif %}" 
+             id="plan-to-watch" 
+             role="tabpanel" 
+             aria-labelledby="plan-to-watch-tab">
+            {% with animes=animes.plan_to_watch %}
+                {% if animes %}
+                    {% include 'anime/partials/anime_grid.html' %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-bookmark fa-4x text-muted mb-3"></i>
+                        <h4>No tienes animes en tu lista de "Plan para ver"</h4>
+                        <p class="text-muted">Añade animes que te interesen a tu lista de pendientes.</p>
+                        <a href="{% url 'anime:catalog' %}" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i> Explorar catálogo
+                        </a>
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle tab state in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status');
+    
+    if (status) {
+        const tabElement = document.querySelector(`[data-bs-target="#${status}"]`);
+        if (tabElement) {
+            const tab = new bootstrap.Tab(tabElement);
+            tab.show();
+        }
+    }
+    
+    // Update URL when tab changes
+    const tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
+    tabEls.forEach(tabEl => {
+        tabEl.addEventListener('shown.bs.tab', function (event) {
+            const status = event.target.getAttribute('data-bs-target').substring(1);
+            const url = new URL(window.location);
+            
+            if (status === 'watching') {
+                url.searchParams.delete('status');
+            } else {
+                url.searchParams.set('status', status);
+            }
+            
+            window.history.pushState({}, '', url);
+        });
+    });
+    
+    // Handle anime status updates
+    document.querySelectorAll('.update-status').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const animeId = this.dataset.animeId;
+            const status = this.dataset.status;
+            const listItem = this.closest('.anime-card');
+            const dropdown = this.closest('.dropdown');
+            const button = dropdown.querySelector('.dropdown-toggle');
+            const originalText = button.innerHTML;
+            
+            // Show loading state
+            button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+            
+            // Send AJAX request
+            fetch('{% url "anime:update_anime_status" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFTTOKEN': '{{ csrf_token }}'
+                },
+                body: `anime_id=${animeId}&status=${status}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update button text and style
+                    button.textContent = data.status_display;
+                    
+                    // Remove all status classes and add the new one
+                    button.className = button.className.replace(/\b(btn-outline-|btn-)(primary|success|info|warning|danger|secondary|dark|light|link)\b/g, '');
+                    button.classList.add('btn', `btn-${status}`);
+                    
+                    // Update the tab badge
+                    const statusTab = document.querySelector(`#${data.status}-tab`);
+                    if (statusTab) {
+                        const badge = statusTab.querySelector('.badge');
+                        if (badge) {
+                            const currentCount = parseInt(badge.textContent) || 0;
+                            badge.textContent = currentCount + 1;
+                            
+                            // Update the current tab badge
+                            const currentTab = document.querySelector('.nav-link.active');
+                            if (currentTab) {
+                                const currentBadge = currentTab.querySelector('.badge');
+                                if (currentBadge) {
+                                    const currentBadgeCount = parseInt(currentBadge.textContent) || 0;
+                                    if (currentBadgeCount > 0) {
+                                        currentBadge.textContent = currentBadgeCount - 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Show success message
+                    const alert = document.createElement('div');
+                    alert.className = 'alert alert-success alert-dismissible fade show mt-3';
+                    alert.role = 'alert';
+                    alert.innerHTML = `
+                        ${data.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+                    
+                    const container = document.querySelector('.container.mt-4');
+                    container.insertBefore(alert, container.firstChild);
+                    
+                    // Close dropdown
+                    const dropdownInstance = bootstrap.Dropdown.getInstance(button);
+                    if (dropdownInstance) {
+                        dropdownInstance.hide();
+                    }
+                    
+                    // If status is 'none', remove the item from the list
+                    if (status === 'none') {
+                        listItem.remove();
+                    }
+                    
+                    // Remove alert after 3 seconds
+                    setTimeout(() => {
+                        alert.classList.remove('show');
+                        setTimeout(() => alert.remove(), 150);
+                    }, 3000);
+                    
+                    // If the current tab is empty now, show the empty state
+                    const currentTabPane = document.querySelector('.tab-pane.active');
+                    const animeGrid = currentTabPane.querySelector('.row');
+                    if (animeGrid && animeGrid.children.length === 0) {
+                        const emptyState = document.createElement('div');
+                        emptyState.className = 'text-center py-5';
+                        emptyState.innerHTML = `
+                            <i class="fas fa-info-circle fa-4x text-muted mb-3"></i>
+                            <h4>No hay animes en esta lista</h4>
+                            <p class="text-muted">Añade animes desde el catálogo.</p>
+                            <a href="{% url 'anime:catalog' %}" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i> Explorar catálogo
+                            </a>
+                        `;
+                        currentTabPane.appendChild(emptyState);
+                    }
+                } else {
+                    throw new Error(data.message || 'Error al actualizar el estado');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.innerHTML = originalText;
+                alert('Error al actualizar el estado: ' + error.message);
+            });
+        });
+    });
+    
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

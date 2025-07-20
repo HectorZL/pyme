@@ -1,0 +1,240 @@
+/* Base styles for anime catalog and cards */
+.anime-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.anime-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.anime-card .card-img-top {
+    height: 300px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.anime-card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+.anime-card .card-body {
+    padding: 1rem;
+}
+
+.anime-card .card-title {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    line-height: 1.3;
+    height: 2.6em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.anime-card .card-text {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.anime-card .badge {
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.35em 0.6em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Status badges */
+.badge-ongoing {
+    background-color: #20c997;
+}
+
+.badge-completed {
+    background-color: #198754;
+}
+
+.badge-upcoming {
+    background-color: #6f42c1;
+}
+
+.badge-hiatus {
+    background-color: #fd7e14;
+}
+
+.badge-cancelled {
+    background-color: #dc3545;
+}
+
+/* Filter sidebar */
+.filter-sidebar {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.filter-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.filter-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.filter-section h5 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #343a40;
+}
+
+/* Custom checkboxes */
+.form-check {
+    margin-bottom: 0.5rem;
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* No image placeholder */
+.no-image-placeholder {
+    height: 300px;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #adb5bd;
+    font-size: 0.9rem;
+}
+
+.no-image-placeholder i {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Pagination */
+.pagination .page-link {
+    color: #0d6efd;
+    border: 1px solid #dee2e6;
+    margin: 0 2px;
+    border-radius: 4px;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .anime-card .card-img-top {
+        height: 250px;
+    }
+    
+    .filter-sidebar {
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Loading animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top: 4px solid #0d6efd;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 2rem auto;
+}
+
+/* Status buttons */
+.btn-watching {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.btn-completed {
+    background-color: #198754;
+    color: white;
+}
+
+.btn-on_hold {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.btn-dropped {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-plan_to_watch {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* Hover effects for status buttons */
+.btn-watching:hover {
+    background-color: #0b5ed7;
+    color: white;
+}
+
+.btn-completed:hover {
+    background-color: #157347;
+    color: white;
+}
+
+.btn-on_hold:hover {
+    background-color: #ffca2c;
+    color: #000;
+}
+
+.btn-dropped:hover {
+    background-color: #bb2d3b;
+    color: white;
+}
+
+.btn-plan_to_watch:hover {
+    background-color: #5c636a;
+    color: white;
+}
