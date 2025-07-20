@@ -17,64 +17,47 @@ class AnimeCatalogView(ListView):
     model = Anime
     template_name = 'anime/catalog.html'
     context_object_name = 'animes'
-    paginate_by = 20
+    paginate_by = 12
     
     def get_queryset(self):
-        queryset = Anime.objects.all().order_by('-created_at')
+        queryset = Anime.objects.all()
         
-        # Apply filters
-        self.filter_form = AnimeFilterForm(self.request.GET or None)
-        if self.filter_form.is_valid():
-            filters = self.filter_form.cleaned_data
-            
-            # Filter by search query
-            if filters.get('q'):
-                query = filters['q']
-                queryset = queryset.filter(
-                    Q(title__icontains=query) |
-                    Q(description__icontains=query) |
-                    Q(genres__name__icontains=query)
-                ).distinct()
-            
-            # Filter by genre
-            if filters.get('genre'):
-                queryset = queryset.filter(genres__in=[filters['genre']])
-            
-            # Filter by status
-            if filters.get('status'):
-                queryset = queryset.filter(status=filters['status'])
-            
-            # Filter by year
-            if filters.get('year'):
-                queryset = queryset.filter(year=filters['year'])
-            
-            # Filter by type
-            if filters.get('anime_type'):
-                queryset = queryset.filter(anime_type=filters['anime_type'])
-            
-            # Sort by
-            if filters.get('sort') == 'title_asc':
-                queryset = queryset.order_by('title')
-            elif filters.get('sort') == 'title_desc':
-                queryset = queryset.order_by('-title')
-            elif filters.get('sort') == 'rating':
-                queryset = queryset.order_by('-rating')
-            elif filters.get('sort') == 'year':
-                queryset = queryset.order_by('-year')
+        # Get search query
+        search_query = self.request.GET.get('q')
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query) |
+                Q(genres__name__icontains=search_query)
+            ).distinct()
+        
+        # Apply sorting
+        sort_by = self.request.GET.get('sort', '-created_at')
+        if sort_by in ['title', '-title', 'year', '-year', '-rating', '-created_at']:
+            queryset = queryset.order_by(sort_by)
         
         return queryset
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['filter_form'] = getattr(self, 'filter_form', AnimeFilterForm())
+        
+        # Get current view mode (grid or list)
+        view_mode = self.request.GET.get('view', 'grid')
+        context['view_mode'] = view_mode if view_mode in ['grid', 'list'] else 'grid'
+        
+        # Add search query to context
+        context['search_query'] = self.request.GET.get('q', '')
+        
+        # Add current sorting to context
+        context['current_sort'] = self.request.GET.get('sort', '-created_at')
         
         # Add user's anime status if authenticated
         if self.request.user.is_authenticated:
-            user_anime = {
-                item.anime_id: item.status 
-                for item in UserAnimeList.objects.filter(user=self.request.user)
-            }
-            context['user_anime'] = user_anime
+            user_anime = UserAnimeList.objects.filter(
+                user=self.request.user,
+                anime_id__in=[anime.id for anime in context['animes']]
+            )
+            context['user_anime_dict'] = {ua.anime_id: ua.status for ua in user_anime}
         
         return context
 

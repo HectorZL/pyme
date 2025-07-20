@@ -21,13 +21,13 @@
             
             <!-- Search and Filter Bar -->
             <div class="catalog-search-container">
-                <div class="search-box">
+                <form method="get" action="{% url 'anime:catalog' %}" class="search-box">
                     <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="search-input" placeholder="Buscar animes...">
-                    <button class="search-btn">
+                    <input type="text" name="q" class="search-input" placeholder="Buscar animes..." value="{{ request.GET.q }}">
+                    <button type="submit" class="search-btn">
                         <i class="fas fa-arrow-right"></i>
                     </button>
-                </div>
+                </form>
                 
                 <div class="filter-toggle">
                     <button class="btn btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse" aria-expanded="false" aria-controls="filtersCollapse">
@@ -97,110 +97,206 @@
         <!-- Sort and View Options -->
         <div class="catalog-header">
             <div class="results-count">
-                Mostrando <span class="fw-bold">1-24</span> de <span class="fw-bold">1,245</span> resultados
+                {% if animes %}
+                    Mostrando <span class="fw-bold">{{ animes.start_index }}-{{ animes.end_index }}</span> de 
+                    <span class="fw-bold">{{ animes.paginator.count }}</span> resultado{{ animes.paginator.count|pluralize }}
+                {% else %}
+                    <span class="fw-bold">0</span> resultados
+                {% endif %}
             </div>
             
             <div class="view-options">
                 <div class="sort-by">
-                    <label for="sortSelect" class="form-label">Ordenar por:</label>
-                    <select class="form-select" id="sortSelect">
-                        <option value="popularity">Popularidad</option>
-                        <option value="latest">Más recientes</option>
-                        <option value="rating">Mejor valorados</option>
-                        <option value="az">A-Z</option>
-                    </select>
+                    <form method="get" id="sort-form">
+                        <input type="hidden" name="q" value="{{ request.GET.q }}">
+                        <label for="sort" class="form-label">Ordenar por:</label>
+                        <select name="sort" class="form-select" id="sort" onchange="this.form.submit()">
+                            <option value="-created_at" {% if request.GET.sort == '-created_at' %}selected{% endif %}>Más recientes</option>
+                            <option value="title" {% if request.GET.sort == 'title' %}selected{% endif %}>Título (A-Z)</option>
+                            <option value="-title" {% if request.GET.sort == '-title' %}selected{% endif %}>Título (Z-A)</option>
+                            <option value="-rating" {% if request.GET.sort == '-rating' %}selected{% endif %}>Mejor valorados</option>
+                            <option value="-year" {% if request.GET.sort == '-year' %}selected{% endif %}>Año (nuevos primero)</option>
+                            <option value="year" {% if request.GET.sort == 'year' %}selected{% endif %}>Año (antiguos primero)</option>
+                        </select>
+                    </form>
                 </div>
                 
                 <div class="view-toggle">
-                    <button class="view-btn active" data-view="grid" title="Vista de cuadrícula">
+                    <button class="view-btn {% if not request.GET.view or request.GET.view == 'grid' %}active{% endif %}" 
+                            data-view="grid" 
+                            title="Vista de cuadrícula"
+                            onclick="setViewMode('grid')">
                         <i class="fas fa-th-large"></i>
                     </button>
-                    <button class="view-btn" data-view="list" title="Vista de lista">
+                    <button class="view-btn {% if request.GET.view == 'list' %}active{% endif %}" 
+                            data-view="list" 
+                            title="Vista de lista"
+                            onclick="setViewMode('list')">
                         <i class="fas fa-list"></i>
                     </button>
                 </div>
             </div>
         </div>
         
-        <!-- Anime Grid -->
-        <div class="anime-grid" id="animeGrid">
+        <!-- Anime Grid/List -->
+        <div class="anime-{{ view_mode }}" id="animeContainer">
             {% for anime in animes %}
-            <div class="anime-card">
-                <div class="anime-card-inner">
-                    <div class="anime-poster">
-                        {% if anime.cover_image %}
-                            <img src="{{ anime.cover_image.url }}" alt="{{ anime.title }}" class="img-fluid">
-                        {% else %}
-                            <img src="https://via.placeholder.com/300x450/1a1a2e/ffffff?text=No+Image" alt="{{ anime.title }}" class="img-fluid">
-                        {% endif %}
-                        <div class="anime-overlay">
-                            {% if anime.rating %}
-                            <div class="anime-rating">
-                                <i class="fas fa-star"></i> {{ anime.rating|floatformat:1 }}
+                {% if view_mode == 'grid' %}
+                    <!-- Grid View Item -->
+                    <div class="anime-card">
+                        <div class="anime-card-inner">
+                            <div class="anime-poster">
+                                {% if anime.cover_image %}
+                                    <img src="{{ anime.cover_image.url }}" alt="{{ anime.title }}" class="img-fluid">
+                                {% else %}
+                                    <img src="https://via.placeholder.com/300x450/1a1a2e/ffffff?text=No+Image" alt="{{ anime.title }}" class="img-fluid">
+                                {% endif %}
+                                <div class="anime-overlay">
+                                    {% if anime.rating %}
+                                    <div class="anime-rating">
+                                        <i class="fas fa-star"></i> {{ anime.rating|floatformat:1 }}
+                                    </div>
+                                    {% endif %}
+                                    <div class="anime-actions">
+                                        <a href="{% url 'anime:anime_detail' anime.slug %}" class="btn-action" title="Ver detalles">
+                                            <i class="fas fa-ellipsis-h"></i>
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
-                            {% endif %}
-                            <div class="anime-actions">
-                                <a href="{% url 'anime:anime_detail' anime.slug %}" class="btn-action" title="Ver detalles">
-                                    <i class="fas fa-ellipsis-h"></i>
-                                </a>
+                            <div class="anime-info">
+                                <h3 class="anime-title">{{ anime.title }}</h3>
+                                <div class="anime-meta">
+                                    <span class="anime-type">{{ anime.get_anime_type_display }}</span>
+                                    <span class="anime-year">{{ anime.year }}</span>
+                                    {% if anime.episodes %}
+                                        <span class="anime-episodes">{{ anime.episodes }} Episodio{{ anime.episodes|pluralize }}</span>
+                                    {% endif %}
+                                </div>
+                                {% if anime.genres.exists %}
+                                <div class="anime-genres">
+                                    {% for genre in anime.genres.all|slice:":2" %}
+                                        <span class="genre-tag">{{ genre.name }}</span>
+                                    {% endfor %}
+                                    {% if anime.genres.count > 2 %}
+                                        <span class="genre-tag">+{{ anime.genres.count|add:"-2" }}</span>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
-                    <div class="anime-info">
-                        <h3 class="anime-title">{{ anime.title }}</h3>
-                        <div class="anime-meta">
-                            <span class="anime-type">{{ anime.get_anime_type_display }}</span>
-                            <span class="anime-year">{{ anime.year }}</span>
-                            {% if anime.episodes %}
-                                <span class="anime-episodes">{{ anime.episodes }} Episodio{{ anime.episodes|pluralize }}</span>
-                            {% endif %}
+                {% else %}
+                    <!-- List View Item -->
+                    <div class="anime-list-item">
+                        <div class="row g-0">
+                            <div class="col-md-2">
+                                {% if anime.cover_image %}
+                                    <img src="{{ anime.cover_image.url }}" alt="{{ anime.title }}" class="img-fluid rounded-start">
+                                {% else %}
+                                    <div class="no-image-placeholder">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-10">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ anime.title }}</h5>
+                                    <div class="anime-meta mb-2">
+                                        <span class="badge bg-primary">{{ anime.get_anime_type_display }}</span>
+                                        <span class="text-muted">{{ anime.year }}</span>
+                                        {% if anime.rating %}
+                                            <span class="text-warning"><i class="fas fa-star"></i> {{ anime.rating|floatformat:1 }}</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if anime.genres.exists %}
+                                        <div class="mb-2">
+                                            {% for genre in anime.genres.all %}
+                                                <span class="badge bg-secondary me-1">{{ genre.name }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    {% if anime.description %}
+                                        <p class="card-text">{{ anime.description|truncatewords:30 }}</p>
+                                    {% endif %}
+                                    <a href="{% url 'anime:anime_detail' anime.slug %}" class="btn btn-sm btn-outline-primary">Ver detalles</a>
+                                </div>
+                            </div>
                         </div>
-                        {% if anime.genres.exists %}
-                        <div class="anime-genres">
-                            {% for genre in anime.genres.all|slice:":2" %}
-                                <span class="genre-tag">{{ genre.name }}</span>
-                            {% endfor %}
-                            {% if anime.genres.count > 2 %}
-                                <span class="genre-tag">+{{ anime.genres.count|add:"-2" }}</span>
-                            {% endif %}
-                        </div>
-                        {% endif %}
                     </div>
-                </div>
-            </div>
+                {% endif %}
             {% empty %}
-            <div class="col-12 text-center py-5">
-                <div class="empty-state">
-                    <i class="fas fa-tv fa-3x mb-3"></i>
-                    <h3>No se encontraron animes</h3>
-                    <p class="text-muted">No hay animes disponibles en el catálogo en este momento.</p>
+                <div class="col-12 text-center py-5">
+                    <div class="empty-state">
+                        <i class="fas fa-tv fa-3x mb-3"></i>
+                        <h3>No se encontraron animes</h3>
+                        <p class="text-muted">No hay animes que coincidan con tu búsqueda.</p>
+                        {% if request.GET.q %}
+                            <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-3">Limpiar búsqueda</a>
+                        {% endif %}
+                    </div>
                 </div>
-            </div>
             {% endfor %}
         </div>
         
         <!-- Pagination -->
+        {% if animes.paginator.num_pages > 1 %}
         <nav aria-label="Paginación de animes" class="mt-5">
             <ul class="pagination justify-content-center">
-                <li class="page-item disabled">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-                </li>
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item">
-                    <span class="page-link">...</span>
-                </li>
-                <li class="page-item"><a class="page-link" href="#">24</a></li>
-                <li class="page-item">
-                    <a class="page-link" href="#">
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                </li>
+                {% if animes.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}{% if request.GET.view %}&view={{ request.GET.view }}{% endif %}" aria-label="Primera">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ animes.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}{% if request.GET.view %}&view={{ request.GET.view }}{% endif %}" aria-label="Anterior">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="fas fa-angle-left"></i></span>
+                    </li>
+                {% endif %}
+                
+                {% for num in animes.paginator.page_range %}
+                    {% if animes.number == num %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > animes.number|add:'-3' and num < animes.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}{% if request.GET.view %}&view={{ request.GET.view }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if animes.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ animes.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}{% if request.GET.view %}&view={{ request.GET.view }}{% endif %}" aria-label="Siguiente">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ animes.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}{% if request.GET.view %}&view={{ request.GET.view }}{% endif %}" aria-label="Última">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="fas fa-angle-right"></i></span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
+                    </li>
+                {% endif %}
             </ul>
         </nav>
+        {% endif %}
     </div>
 </main>
 
@@ -289,5 +385,27 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/catalog.js' %}"></script>
+<script>
+    // Set view mode from URL parameter
+    function setViewMode(mode) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('view', mode);
+        window.location.href = url.toString();
+    }
+
+    // Initialize view mode from URL or default to grid
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewMode = urlParams.get('view') || 'grid';
+        
+        // Set active view button
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            if (btn.dataset.view === viewMode) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    });
+</script>
 {% endblock %}
