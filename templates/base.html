@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="el pyme anime - Tu plataforma para ver y descubrir anime">
-    <meta name="theme-color" content="#D32F2F">
-    <title>{% block title %}el pyme anime{% endblock %}</title>
+    <meta name="description" content="PYCTEM.ANIME - Tu plataforma para ver y descubrir anime">
+    <meta name="theme-color" content="#FF8C00">
+    <title>{% block title %}PYCTEM.ANIME{% endblock %}</title>
     
     <!-- Favicon -->
     <link rel="icon" href="{% static 'images/favicon.ico' %}">
@@ -14,7 +14,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32x32.png' %}">
     <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon-16x16.png' %}">
     <link rel="manifest" href="{% static 'site.webmanifest' %}">
-    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-TileColor" content="#000000">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -30,10 +30,10 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #000000;">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{% url 'anime:home' %}">
-                <span>el pyme</span><span class="text-warning">anime</span>
+            <a class="navbar-brand fw-bold" href="{% url 'anime:home' %}" style="color: #FF8C00;">
+                PYCTEM.<span style="color: #ffffff;">ANIME</span>
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" 
@@ -44,26 +44,26 @@
             <div class="collapse navbar-collapse" id="navbarMain">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" 
+                        <a class="nav-link {% if request.path == '/' %}active" style="background-color: #FF8C00;{% else %}" style="color: #ffffff;"{% endif %}
                            href="{% url 'anime:home' %}">
                             <i class="fas fa-home me-1"></i> Inicio
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if 'catalog' in request.path %}active{% endif %}" 
+                        <a class="nav-link {% if 'catalog' in request.path %}active" style="background-color: #FF8C00;{% else %}" style="color: #ffffff;"{% endif %}
                            href="{% url 'anime:catalog' %}">
                             <i class="fas fa-list me-1"></i> Catálogo
                         </a>
                     </li>
                     {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link {% if 'my-list' in request.path %}active{% endif %}" 
+                        <a class="nav-link {% if 'my-list' in request.path %}active" style="background-color: #FF8C00;{% else %}" style="color: #ffffff;"{% endif %}
                            href="{% url 'anime:user_anime_list' %}">
                             <i class="fas fa-tv me-1"></i> Mi Lista
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link" href="#" style="color: #ffffff;">
                             <i class="fas fa-heart me-1"></i> Favoritos
                         </a>
                     </li>
@@ -74,36 +74,36 @@
                     <!-- Search Bar -->
                     <form class="d-flex me-3" role="search">
                         <div class="input-group">
-                            <input class="form-control" type="search" placeholder="Buscar anime..." aria-label="Search">
-                            <button class="btn btn-outline-light" type="submit">
+                            <input class="form-control" type="search" placeholder="Buscar anime..." aria-label="Search" style="background-color: #333; color: white; border: 1px solid #FF8C00;">
+                            <button class="btn" type="submit" style="background-color: #FF8C00; color: white; border: 1px solid #FF8C00;">
                                 <i class="fas fa-search"></i>
                             </button>
                         </div>
                     </form>
 
                     <!-- Theme Toggle -->
-                    <button id="theme-toggle" class="btn btn-outline-light me-2" title="Cambiar tema">
+                    <button id="theme-toggle" class="btn me-2" style="background-color: #FF8C00; color: white; border: none;" title="Cambiar tema">
                         <i class="fas fa-moon"></i>
                     </button>
 
                     <!-- User Menu -->
                     {% if user.is_authenticated %}
                     <div class="dropdown">
-                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" 
-                                data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="btn dropdown-toggle" type="button" id="userDropdown" 
+                                data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #FF8C00; color: white; border: none;">
                             <i class="fas fa-user me-1"></i> {{ user.username }}
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="{% url 'anime:profile' %}"><i class="fas fa-user me-2"></i>Mi Perfil</a></li>
-                            <li><a class="dropdown-item" href="{% url 'anime:user_anime_list' %}"><i class="fas fa-tv me-2"></i>Mi Lista de Anime</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-heart me-2"></i>Favoritos</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configuración</a></li>
-                            <li><hr class="dropdown-divider"></li>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style="background-color: #333;">
+                            <li><a class="dropdown-item" href="{% url 'anime:profile' %}" style="color: white;"><i class="fas fa-user me-2"></i>Mi Perfil</a></li>
+                            <li><a class="dropdown-item" href="{% url 'anime:user_anime_list' %}" style="color: white;"><i class="fas fa-tv me-2"></i>Mi Lista de Anime</a></li>
+                            <li><a class="dropdown-item" href="#" style="color: white;"><i class="fas fa-heart me-2"></i>Favoritos</a></li>
+                            <li><a class="dropdown-item" href="#" style="color: white;"><i class="fas fa-cog me-2"></i>Configuración</a></li>
+                            <li><hr class="dropdown-divider" style="border-color: #555;"></li>
                             <li>
-                                <form method="post" action="{% url 'anime:logout' %}" class="d-inline">
+                                <form id="logout-form" method="post" action="{% url 'anime:logout' %}" class="d-inline">
                                     {% csrf_token %}
-                                    <button type="submit" class="dropdown-item text-danger" style="background: none; border: none; width: 100%; text-align: left;">
-                                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión
+                                    <button type="submit" class="dropdown-item" style="color: white; background: none; border: none; width: 100%; text-align: left;">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
                                     </button>
                                 </form>
                             </li>
@@ -111,8 +111,8 @@
                     </div>
                     {% else %}
                     <div class="d-flex">
-                        <a href="{% url 'anime:login' %}" class="btn btn-outline-light me-2">Iniciar sesión</a>
-                        <a href="{% url 'anime:register' %}" class="btn btn-warning">Registrarse</a>
+                        <a href="{% url 'anime:login' %}" class="btn me-2" style="background-color: #FF8C00; color: white; border: none;">Iniciar Sesión</a>
+                        <a href="{% url 'anime:register' %}" class="btn" style="background-color: #333; color: white; border: 1px solid #FF8C00;">Registrarse</a>
                     </div>
                     {% endif %}
                 </div>
@@ -121,42 +121,40 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-grow-1 py-4">
+    <main class="flex-grow-1 py-4" style="background-color: #000000; color: #ffffff;">
         <div class="container">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
             {% block content %}
             {% endblock %}
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white py-4 mt-auto">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>el pymeanime</h5>
-                    <p class="mb-0">Tu plataforma para ver y descubrir anime</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <div class="social-links">
-                        <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="text-white"><i class="fab fa-instagram"></i></a>
-                    </div>
-                </div>
-            </div>
-            <hr class="my-3">
-            <div class="text-center">
-                <p class="mb-0">&copy; {% now "Y" %} el pymeanime. Todos los derechos reservados.</p>
-            </div>
+    <footer class="footer mt-auto py-3" style="background-color: #000000; color: #ffffff; border-top: 1px solid #FF8C00;">
+        <div class="container text-center">
+            <span class="text-muted">2025 PYCTEM.ANIME - Todos los derechos reservados</span>
         </div>
     </footer>
 
-    <!-- Bootstrap JS Bundle with Popper -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="{% static 'js/theme.js' %}"></script>
+    <!-- Custom JS -->
+    <script src="{% static 'js/script.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+    
+    <!-- CSRF token setup for AJAX -->
     <script>
-    // CSRF token setup for AJAX
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -176,7 +174,7 @@
     // Set up AJAX headers
     $.ajaxSetup({
         beforeSend: function(xhr, settings) {
-            if (!this.crossDomain) {
+            if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
                 xhr.setRequestHeader("X-CSRFToken", csrftoken);
             }
         }
@@ -186,36 +184,38 @@
         // Theme Toggle Functionality
         document.addEventListener('DOMContentLoaded', function() {
             const themeToggle = document.getElementById('theme-toggle');
-            const icon = document.getElementById('theme-icon');
+            const htmlElement = document.documentElement;
+            const icon = themeToggle.querySelector('i');
             
-            // Check for saved user preference, if any, on load
+            // Check for saved theme preference or use preferred color scheme
             const currentTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-bs-theme', currentTheme);
             
-            // Set initial icon
-            if (icon) {
-                icon.className = currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            // Apply the current theme
+            if (currentTheme === 'dark') {
+                htmlElement.setAttribute('data-bs-theme', 'dark');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                htmlElement.setAttribute('data-bs-theme', 'light');
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
             }
             
-            // Toggle theme function
-            if (themeToggle) {
-                themeToggle.addEventListener('click', function() {
-                    const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                    
-                    // Update theme
-                    document.documentElement.setAttribute('data-bs-theme', newTheme);
-                    localStorage.setItem('theme', newTheme);
-                    
-                    // Update icon
-                    if (icon) {
-                        icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-                    }
-                });
-            }
+            // Toggle theme on button click
+            themeToggle.addEventListener('click', function() {
+                if (htmlElement.getAttribute('data-bs-theme') === 'dark') {
+                    htmlElement.setAttribute('data-bs-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                    icon.classList.remove('fa-sun');
+                    icon.classList.add('fa-moon');
+                } else {
+                    htmlElement.setAttribute('data-bs-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                }
+            });
         });
     </script>
-    
-    {% block extra_js %}{% endblock %}
 </body>
 </html>
