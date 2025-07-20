@@ -86,7 +86,14 @@
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li><a class="dropdown-item" href="{% url 'anime:profile' %}"><i class="fas fa-user me-2"></i>Perfil</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="{% url 'anime:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión</a></li>
+                            <li>
+                                <form method="post" action="{% url 'anime:logout' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item text-danger" style="background: none; border: none; width: 100%; text-align: left;">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión
+                                    </button>
+                                </form>
+                            </li>
                         </ul>
                     </div>
                     {% else %}

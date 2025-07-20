@@ -6,7 +6,10 @@ from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('anime.urls')),  # Main anime app URLs
+    path('', include('anime.urls', namespace='anime')),  # Main anime app URLs
+    
+    # Redirect Django's default /accounts/profile/ to our custom profile page
+    path('accounts/profile/', RedirectView.as_view(pattern_name='anime:profile', permanent=False)),
     
     # Redirect root URL to the home page
     path('', RedirectView.as_view(url='/', permanent=False)),

@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-success">
+        Has cerrado sesión exitosamente.
+    </div>
+    <p class="text-center">
+        <a href="{% url 'anime:home' %}" class="btn btn-primary">Volver a la página principal</a>
+    </p>
+</div>
+{% endblock %}
