@@ -25,32 +25,23 @@
                         {% endif %}
                         
                         {% if user.is_authenticated %}
-                            <div class="mt-3">
-                                <div class="btn-group w-100" role="group">
-                                    <button type="button" class="btn {% if user_status %}btn-{{ user_status|default:'primary' }}{% else %}btn-outline-primary{% endif %} dropdown-toggle" 
-                                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="d-flex gap-2 mt-3">
+                                <div class="btn-group flex-grow-1" role="group">
+                                    <button type="button" class="btn {% if user_status %}btn-{{ user_status }}{% else %}btn-outline-primary{% endif %} add-to-list-btn" 
+                                            data-anime-id="{{ anime.id }}">
                                         {% if user_status %}
                                             {{ user_status|title }}
                                         {% else %}
                                             Añadir a mi lista
                                         {% endif %}
                                     </button>
-                                    <ul class="dropdown-menu">
-                                        {% for status in UserAnimeList.LIST_CHOICES %}
-                                            <li>
-                                                <a class="dropdown-item update-status {% if user_status == status.0 %}active{% endif %}" 
-                                                   href="#" 
-                                                   data-anime-id="{{ anime.id }}" 
-                                                   data-status="{{ status.0 }}">
-                                                    {{ status.1 }}
-                                                    {% if user_status == status.0 %}
-                                                        <i class="fas fa-check ms-2"></i>
-                                                    {% endif %}
-                                                </a>
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
                                 </div>
+                                
+                                <button class="btn btn-outline-danger favorite-btn {% if is_favorite %}active{% endif %}" 
+                                        data-anime-id="{{ anime.id }}" 
+                                        title="{% if is_favorite %}Quitar de favoritos{% else %}Añadir a favoritos{% endif %}">
+                                    <i class="fas fa-heart"></i>
+                                </button>
                             </div>
                         {% else %}
                             <a href="{% url 'anime:login' %}?next={{ request.path }}" 
@@ -229,80 +220,218 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Add to List Modal -->
+<div class="modal fade" id="addToListModal" tabindex="-1" aria-labelledby="addToListModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addToListModalLabel">Añadir a Mi Lista</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Selecciona cómo quieres añadir este anime a tu lista:</p>
+                <div class="list-group">
+                    {% for status in UserAnimeList.LIST_CHOICES %}
+                        <a href="#" class="list-group-item list-group-item-action status-option" 
+                           data-status="{{ status.0 }}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ status.1 }}</h6>
+                                {% if status.0 == 'plan_to_watch' %}
+                                    <small><i class="fas fa-clock"></i></small>
+                                {% elif status.0 == 'watching' %}
+                                    <small><i class="fas fa-tv"></i></small>
+                                {% elif status.0 == 'completed' %}
+                                    <small><i class="fas fa-check-circle"></i></small>
+                                {% elif status.0 == 'on_hold' %}
+                                    <small><i class="fas fa-pause-circle"></i></small>
+                                {% elif status.0 == 'dropped' %}
+                                    <small><i class="fas fa-times-circle"></i></small>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">
+                                {% if status.0 == 'plan_to_watch' %}Planificas ver este anime más tarde
+                                {% elif status.0 == 'watching' %}Actualmente estás viendo este anime
+                                {% elif status.0 == 'completed' %}Has terminado de ver este anime
+                                {% elif status.0 == 'on_hold' %}Has pausado temporalmente este anime
+                                {% elif status.0 == 'dropped' %}Has dejado de ver este anime
+                                {% endif %}
+                            </small>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle anime status updates
-    document.querySelectorAll('.update-status').forEach(link => {
-        link.addEventListener('click', function(e) {
+    // Variables to store the current anime being processed
+    let currentAnimeId = null;
+    
+    // Initialize the modal
+    const addToListModal = new bootstrap.Modal(document.getElementById('addToListModal'));
+    
+    // Handle click on "Add to My List" button
+    document.querySelectorAll('.add-to-list-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentAnimeId = this.dataset.animeId;
+            addToListModal.show();
+        });
+    });
+    
+    // Handle status selection in the modal
+    document.querySelectorAll('.status-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            const status = this.dataset.status;
+            
+            if (status && currentAnimeId) {
+                updateAnimeStatus(currentAnimeId, status);
+                addToListModal.hide();
+            }
+        });
+    });
+    
+    // Function to update anime status
+    function updateAnimeStatus(animeId, status) {
+        fetch('{% url "anime:update_anime_list" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                anime_id: animeId,
+                action: 'update_status',
+                status: status
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Update the UI to reflect the new status
+                const button = document.querySelector(`.add-to-list-btn[data-anime-id="${animeId}"]`);
+                if (button) {
+                    button.textContent = data.new_status ? data.new_status.charAt(0).toUpperCase() + data.new_status.slice(1) : 'Añadir a mi lista';
+                    
+                    // Remove all status classes and add the appropriate one
+                    const statusClasses = ['btn-outline-primary', 'btn-plan_to_watch', 'btn-watching', 'btn-completed', 'btn-on_hold', 'btn-dropped'];
+                    button.classList.remove(...statusClasses);
+                    
+                    if (data.new_status) {
+                        button.classList.add(`btn-${data.new_status}`);
+                    } else {
+                        button.classList.add('btn-outline-primary');
+                    }
+                }
+                
+                // Show success message
+                showToast('success', data.message);
+                
+                // Reload the page to show the updated status
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showToast('error', data.message || 'Error al actualizar la lista');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', 'Error al actualizar la lista');
+        });
+    }
+    
+    // Toggle favorite status
+    document.querySelectorAll('.favorite-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
             e.preventDefault();
             const animeId = this.dataset.animeId;
-            const status = this.dataset.status;
-            const button = this.closest('.btn-group').querySelector('.dropdown-toggle');
-            const originalText = button.innerHTML;
             
-            // Show loading state
-            button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
-            
-            // Send AJAX request
-            fetch('{% url "anime:update_anime_status" %}', {
+            fetch('{% url "anime:update_anime_list" %}', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFTOKEN': '{{ csrf_token }}'
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: `anime_id=${animeId}&status=${status}`
+                body: JSON.stringify({
+                    anime_id: animeId,
+                    action: 'toggle_favorite'
+                })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    // Update button text and style
-                    button.textContent = data.status_display;
+                    // Toggle active class
+                    this.classList.toggle('active');
                     
-                    // Remove all status classes and add the new one
-                    button.className = button.className.replace(/\b(btn-outline-|btn-)(primary|success|info|warning|danger|secondary|dark|light|link)\b/g, '');
-                    button.classList.add('btn', `btn-${status}`);
+                    // Update tooltip
+                    this.title = this.classList.contains('active') ? 'Quitar de favoritos' : 'Añadir a favoritos';
                     
                     // Show success message
-                    const alert = document.createElement('div');
-                    alert.className = 'alert alert-success alert-dismissible fade show mt-3';
-                    alert.role = 'alert';
-                    alert.innerHTML = `
-                        ${data.message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    `;
-                    button.closest('.anime-poster').appendChild(alert);
+                    showToast('success', data.message);
                     
-                    // Close dropdown
-                    const dropdown = bootstrap.Dropdown.getInstance(button);
-                    if (dropdown) {
-                        dropdown.hide();
-                    }
-                    
-                    // Remove alert after 3 seconds
-                    setTimeout(() => {
-                        alert.classList.remove('show');
-                        setTimeout(() => alert.remove(), 150);
-                    }, 3000);
+                    // Reload the page to show the updated status
+                    setTimeout(() => window.location.reload(), 1000);
                 } else {
-                    throw new Error(data.message || 'Error al actualizar el estado');
+                    showToast('error', data.message || 'Error al actualizar favoritos');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                button.innerHTML = originalText;
-                alert('Error al actualizar el estado: ' + error.message);
+                showToast('error', 'Error al actualizar favoritos');
             });
         });
     });
     
-    // Initialize tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+    // Show toast notifications
+    function showToast(type, message) {
+        // Create toast element if it doesn't exist
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            document.body.appendChild(toastContainer);
+        }
+        
+        const toastId = 'toast-' + Date.now();
+        const toastClass = type === 'success' ? 'text-bg-success' : 'text-bg-danger';
+        
+        const toast = document.createElement('div');
+        toast.className = `toast show ${toastClass}`;
+        toast.role = 'alert';
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        toast.id = toastId;
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        // Auto remove toast after 3 seconds
+        setTimeout(() => {
+            const toastElement = document.getElementById(toastId);
+            if (toastElement) {
+                toastElement.remove();
+            }
+        }, 3000);
+    }
 });
 </script>
 {% endblock %}

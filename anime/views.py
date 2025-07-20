@@ -9,6 +9,18 @@ from django.http import JsonResponse
 from django.db.models import Q, Count, Case, When, IntegerField
 from .models import Anime, Genre, UserAnimeList
 from .forms import AnimeFilterForm
+import json
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
+from functools import wraps
+
+def require_ajax(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 class HomeView(TemplateView):
     template_name = 'anime/index.html'
@@ -70,6 +82,12 @@ class AnimeDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
+        # Import UserAnimeList to access LIST_CHOICES
+        from .models import UserAnimeList
+        
+        # Add LIST_CHOICES to context
+        context['list_choices'] = UserAnimeList.LIST_CHOICES
+        
         # Add user's anime status if authenticated
         if self.request.user.is_authenticated:
             try:
@@ -85,47 +103,71 @@ class AnimeDetailView(DetailView):
 
 class UserAnimeListView(LoginRequiredMixin, ListView):
     model = UserAnimeList
-    template_name = 'anime/my_list.html'
-    context_object_name = 'anime_list'
+    template_name = 'anime/user_anime_list.html'
+    context_object_name = 'user_anime_list'
     
     def get_queryset(self):
-        status = self.request.GET.get('status', 'all')
-        queryset = UserAnimeList.objects.filter(user=self.request.user)
+        # Get the status filter from URL parameters
+        status_filter = self.request.GET.get('status')
         
-        if status != 'all':
-            queryset = queryset.filter(status=status)
-            
+        # Base queryset - only get the user's anime with valid slugs
+        queryset = UserAnimeList.objects.filter(
+            user=self.request.user,
+            anime__slug__isnull=False
+        ).exclude(anime__slug='')
+        
+        # Apply status filter if provided
+        if status_filter and status_filter in dict(UserAnimeList.LIST_CHOICES):
+            queryset = queryset.filter(status=status_filter)
+        
         return queryset.select_related('anime')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        status = self.request.GET.get('status', 'all')
         
-        # Get counts for each status
-        counts = UserAnimeList.objects.filter(
-            user=self.request.user
-        ).values('status').annotate(
+        # Add LIST_CHOICES to context
+        context['list_choices'] = UserAnimeList.LIST_CHOICES
+        
+        # Filter out any entries with empty or None slugs just to be safe
+        valid_entries = [
+            ua for ua in self.object_list 
+            if ua.anime and ua.anime.slug
+        ]
+        
+        # Create a dictionary of anime IDs to their status for the template
+        context['user_anime'] = {
+            ua.anime_id: ua.status 
+            for ua in valid_entries
+        }
+        
+        # Get a list of anime objects for the template (for the anime cards)
+        context['animes'] = [ua.anime for ua in valid_entries]
+        
+        # Add favorites for the template
+        context['favorites'] = set(
+            ua.anime_id for ua in valid_entries
+            if ua.is_favorite
+        )
+        
+        # Get status counts for the filter tabs, excluding entries with invalid slugs
+        status_counts = UserAnimeList.objects.filter(
+            user=self.request.user,
+            anime__slug__isnull=False
+        ).exclude(anime__slug='').values('status').annotate(
             count=Count('status')
         )
         
-        # Initialize all counts to 0
-        status_counts = {
-            'watching': 0,
-            'completed': 0,
-            'plan_to_watch': 0,
-            'on_hold': 0,
-            'dropped': 0
+        # Convert to a dictionary for easier access in the template
+        context['status_counts'] = {
+            item['status']: item['count'] 
+            for item in status_counts
         }
         
-        # Update with actual counts
-        for item in counts:
-            status_counts[item['status']] = item['count']
+        # Add total count
+        context['total_count'] = sum(context['status_counts'].values())
         
-        context.update({
-            'status': status,
-            'status_counts': status_counts,
-            'total_anime': sum(status_counts.values())
-        })
+        # Add current status filter
+        context['current_status'] = self.request.GET.get('status', 'all')
         
         return context
 
@@ -163,6 +205,89 @@ class RegisterView(CreateView):
         response = super().form_valid(form)
         login(self.request, self.object)  # Log the user in after registration
         return response
+
+@require_http_methods(["POST"])
+@login_required
+@require_ajax
+def update_anime_list(request):
+    """
+    Handle AJAX requests to update an anime's status in the user's list or toggle favorite status.
+    
+    Expected POST parameters:
+    - anime_id: ID of the anime to update
+    - action: 'update_status' or 'toggle_favorite'
+    - status: Required if action is 'update_status', the new status (watching, completed, etc.)
+    
+    Returns JSON response with status and message.
+    """
+    try:
+        data = json.loads(request.body)
+        anime_id = data.get('anime_id')
+        action = data.get('action')
+        
+        if not anime_id or not action:
+            return JsonResponse({'status': 'error', 'message': 'Missing required parameters'}, status=400)
+        
+        anime = get_object_or_404(Anime, id=anime_id)
+        
+        if action == 'update_status':
+            status = data.get('status')
+            if not status:
+                return JsonResponse({'status': 'error', 'message': 'Status is required'}, status=400)
+                
+            # If status is 'none', remove from list
+            if status == 'none':
+                UserAnimeList.objects.filter(user=request.user, anime=anime).delete()
+                return JsonResponse({
+                    'status': 'success', 
+                    'message': 'Anime removed from your list',
+                    'new_status': None,
+                    'is_favorite': False
+                })
+            
+            # Otherwise, update or create the entry
+            user_anime, created = UserAnimeList.objects.get_or_create(
+                user=request.user,
+                anime=anime,
+                defaults={'status': status}
+            )
+            
+            if not created and user_anime.status != status:
+                user_anime.status = status
+                user_anime.save()
+            
+            return JsonResponse({
+                'status': 'success', 
+                'message': f'Status updated to {user_anime.get_status_display()}',
+                'new_status': user_anime.status,
+                'is_favorite': user_anime.is_favorite
+            })
+            
+        elif action == 'toggle_favorite':
+            user_anime, created = UserAnimeList.objects.get_or_create(
+                user=request.user,
+                anime=anime,
+                defaults={'status': 'plan_to_watch', 'is_favorite': True}
+            )
+            
+            # Toggle favorite status
+            user_anime.is_favorite = not user_anime.is_favorite
+            user_anime.save()
+            
+            return JsonResponse({
+                'status': 'success', 
+                'message': f'Anime {"added to" if user_anime.is_favorite else "removed from"} favorites',
+                'is_favorite': user_anime.is_favorite,
+                'current_status': user_anime.status if not created else None
+            })
+            
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Invalid action'}, status=400)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 def update_anime_status(request):
     """
@@ -237,7 +362,7 @@ def get_anime_list_by_status(request, status):
     AJAX endpoint to get anime list filtered by status.
     Returns rendered HTML of anime cards for the given status.
     """
-    if not request.user.is_authenticated or not request.headers.get('x-requested-with') == 'XMLHttpRequest':
+    if not request.user.is_authenticated:
         return JsonResponse({'status': 'error', 'message': 'Authentication required'}, status=403)
     
     # Validate status
@@ -245,34 +370,127 @@ def get_anime_list_by_status(request, status):
     if status not in valid_statuses:
         return JsonResponse({'status': 'error', 'message': 'Invalid status'}, status=400)
     
-    # Get anime list for the status
-    user_anime = UserAnimeList.objects.filter(user=request.user)
+    # Get user's anime list filtered by status and exclude entries with empty or None slugs
+    user_anime_list = UserAnimeList.objects.filter(
+        user=request.user,
+        anime__slug__isnull=False,
+    ).exclude(anime__slug='')
     
     if status != 'all':
-        user_anime = user_anime.filter(status=status)
+        user_anime_list = user_anime_list.filter(status=status)
     
-    # Order by most recently updated
-    user_anime = user_anime.select_related('anime').order_by('-updated_at')
+    # Get the anime objects with valid slugs
+    animes = []
+    valid_entries = []
+    for item in user_anime_list.select_related('anime'):
+        if item.anime.slug:  # Double-check that slug is not empty
+            animes.append(item.anime)
+            valid_entries.append(item)
+    
+    # Create a dictionary of anime statuses for the template
+    user_anime_dict = {}
+    for entry in valid_entries:
+        user_anime_dict[entry.anime_id] = entry
+    
+    # Get favorite anime IDs
+    favorites = set(entry.anime_id for entry in valid_entries if entry.is_favorite)
     
     # Render the anime cards
     html = render_to_string('anime/partials/anime_grid.html', {
-        'animes': [item.anime for item in user_anime],
-        'user_anime': {item.anime_id: item.status for item in user_anime}
+        'animes': animes,
+        'user_anime_list': user_anime_dict,
+        'favorites': favorites
     })
     
-    # Get counts for all statuses
-    status_counts = UserAnimeList.objects.filter(
-        user=request.user
-    ).values('status').annotate(
-        count=Count('status')
-    )
+    return JsonResponse({'status': 'success', 'html': html})
+
+@require_http_methods(["POST"])
+@login_required
+@require_ajax
+def toggle_favorite(request):
+    """
+    Handle AJAX requests to toggle an anime's favorite status.
     
-    # Format counts as a dictionary
-    counts = {item['status']: item['count'] for item in status_counts}
+    Expected POST parameters:
+    - anime_id: ID of the anime to toggle favorite status for
     
-    return JsonResponse({
-        'status': 'success',
-        'html': html,
-        'count': user_anime.count(),
-        'status_counts': counts
-    })
+    Returns JSON response with status and updated favorite status.
+    """
+    try:
+        data = json.loads(request.body)
+        anime_id = data.get('anime_id')
+        
+        if not anime_id:
+            return JsonResponse({'status': 'error', 'message': 'Missing anime_id parameter'}, status=400)
+        
+        anime = get_object_or_404(Anime, id=anime_id)
+        
+        # Get or create the user's anime list entry
+        user_anime, created = UserAnimeList.objects.get_or_create(
+            user=request.user,
+            anime=anime,
+            defaults={'status': 'plan_to_watch', 'is_favorite': True}
+        )
+        
+        # Toggle favorite status if not just created
+        if not created:
+            user_anime.is_favorite = not user_anime.is_favorite
+            user_anime.save(update_fields=['is_favorite', 'updated_at'])
+        
+        # Get updated favorites count
+        favorites_count = UserAnimeList.objects.filter(user=request.user, is_favorite=True).count()
+        
+        return JsonResponse({
+            'status': 'success',
+            'is_favorite': user_anime.is_favorite,
+            'favorites_count': favorites_count,
+            'message': f'Anime {anime.title} {"añadido a" if user_anime.is_favorite else "eliminado de"} favoritos'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@require_http_methods(["POST"])
+@login_required
+@require_ajax
+def remove_from_list(request):
+    """
+    Handle AJAX requests to remove an anime from the user's list.
+    
+    Expected POST parameters:
+    - anime_id: ID of the anime to remove
+    
+    Returns JSON response with status and message.
+    """
+    try:
+        data = json.loads(request.body)
+        anime_id = data.get('anime_id')
+        
+        if not anime_id:
+            return JsonResponse({'status': 'error', 'message': 'Missing anime_id parameter'}, status=400)
+        
+        anime = get_object_or_404(Anime, id=anime_id)
+        
+        # Delete the anime from user's list if it exists
+        deleted, _ = UserAnimeList.objects.filter(
+            user=request.user,
+            anime=anime
+        ).delete()
+        
+        if deleted:
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Anime {anime.title} eliminado de tu lista'
+            })
+        else:
+            return JsonResponse({
+                'status': 'success',
+                'message': 'El anime no estaba en tu lista'
+            })
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

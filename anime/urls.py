@@ -16,7 +16,10 @@ urlpatterns = [
     # User anime list management
     path('my-list/', views.UserAnimeListView.as_view(), name='user_anime_list'),
     path('update-status/', views.update_anime_status, name='update_anime_status'),
+    path('update-anime-list/', views.update_anime_list, name='update_anime_list'),
     path('api/list/<str:status>/', views.get_anime_list_by_status, name='get_anime_list_by_status'),
+    path('toggle-favorite/', views.toggle_favorite, name='toggle_favorite'),
+    path('remove-from-list/', views.remove_from_list, name='remove_from_list'),
     
     # Authentication URLs
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
