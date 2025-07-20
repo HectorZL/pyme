@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,232 +16,162 @@
     <link rel="manifest" href="{% static 'site.webmanifest' %}">
     <meta name="msapplication-TileColor" content="#da532c">
     
-    <!-- CSS -->
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components/responsive.css' %}">
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    {% block extra_css %}{% endblock %}
-    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
-          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" 
-          crossorigin="anonymous" referrerpolicy="no-referrer" />
-    
-    <!-- Theme preference -->
-    <!-- Theme Script -->
-    <script>
-        // Check for saved theme preference or use system preference
-        const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-        const currentTheme = localStorage.getItem('theme') || 
-                           (prefersDarkScheme.matches ? 'dark' : 'light');
-        
-        // Apply the theme
-        document.documentElement.setAttribute('data-theme', currentTheme);
-        
-        // Function to toggle theme
-        function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            // Update the toggle button icon
-            const themeToggle = document.getElementById('theme-toggle');
-            if (themeToggle) {
-                const icon = themeToggle.querySelector('i');
-                icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-            }
-        }
-        
-        // Initialize theme toggle button
-        document.addEventListener('DOMContentLoaded', function() {
-            const themeToggle = document.getElementById('theme-toggle');
-            if (themeToggle) {
-                themeToggle.addEventListener('click', toggleTheme);
-                // Set initial icon
-                const icon = themeToggle.querySelector('i');
-                if (icon) {
-                    icon.className = currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-                }
-            }
-        });
-    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block extra_css %}{% endblock %}
 </head>
-<body class="{% if request.user.is_authenticated %}logged-in{% endif %}">
-    <!-- Header -->
-    <header class="header">
-        <div class="container header-container">
-            <!-- Logo -->
-            <div class="logo-container">
-                <a href="{% url 'anime:home' %}" class="logo">
-                    <span class="logo-text">el pyme</span><span class="logo-highlight">anime</span>
-                </a>
-            </div>
+<body class="d-flex flex-column min-vh-100">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'anime:home' %}">
+                <span>el pyme</span><span class="text-warning">anime</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" 
+                    aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-            <!-- Desktop Navigation -->
-            <nav class="navbar navbar-expand-lg">
-                <!-- Mobile Toggle Button -->
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
-                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                
-                <!-- Navigation Links -->
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a href="{% url 'anime:home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}" 
-                               title="Página de inicio">
-                                <i class="fas fa-home me-1"></i> Inicio
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'anime:catalog' %}" class="nav-link {% if 'catalog' in request.path %}active{% endif %}"
-                               title="Explorar catálogo de anime">
-                                <i class="fas fa-list me-1"></i> Catálogo
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="fas fa-tags"></i> Géneros
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="fas fa-tv"></i> Nuevos Episodios
-                            </a>
-                        </li>
-                    </ul>
-                    
-                    <!-- Search and User Actions -->
-                    <div class="d-flex align-items-center gap-3">
-                        <!-- Search Bar -->
-                        <div class="search-container position-relative">
-                            <input type="text" id="search-input" class="form-control ps-4" 
-                                   placeholder="Buscar anime..." aria-label="Buscar anime">
-                            <button id="search-button" class="btn btn-link position-absolute end-0 top-50 translate-middle-y me-2" 
-                                    type="button" title="Buscar">
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" 
+                           href="{% url 'anime:home' %}">
+                            <i class="fas fa-home me-1"></i> Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'catalog' in request.path %}active{% endif %}" 
+                           href="{% url 'anime:catalog' %}">
+                            <i class="fas fa-list me-1"></i> Catálogo
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-heart me-1"></i> Favoritos
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+
+                <div class="d-flex align-items-center">
+                    <!-- Search Bar -->
+                    <form class="d-flex me-3" role="search">
+                        <div class="input-group">
+                            <input class="form-control" type="search" placeholder="Buscar anime..." aria-label="Search">
+                            <button class="btn btn-outline-light" type="submit">
                                 <i class="fas fa-search"></i>
                             </button>
                         </div>
-                        
-                        <!-- Theme Toggle -->
-                        <button id="theme-toggle" class="btn btn-outline-secondary rounded-circle p-2" 
-                                type="button" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema">
-                            <i class="fas fa-moon"></i>
-                        </button>
-                        
-                        <!-- Coming Soon: User Authentication -->
-                        <div class="coming-soon-auth">
-                            <button class="btn btn-outline-secondary rounded-pill px-3 py-2"
-                                    type="button"
-                                    title="Próximamente: Inicio de sesión"
-                                    disabled>
-                                <i class="fas fa-user-lock me-2"></i>
-                                <span class="d-none d-md-inline">Iniciar sesión</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-            
-            
-        </div>
+                    </form>
 
-        
-        
-        
-    </header>
+                    <!-- Theme Toggle -->
+                    <button id="theme-toggle" class="btn btn-outline-light me-2" title="Cambiar tema">
+                        <i class="fas fa-moon"></i>
+                    </button>
+
+                    <!-- User Menu -->
+                    {% if user.is_authenticated %}
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user me-1"></i> {{ user.username }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="{% url 'anime:profile' %}"><i class="fas fa-user me-2"></i>Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'anime:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión</a></li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <div class="d-flex">
+                        <a href="{% url 'anime:login' %}" class="btn btn-outline-light me-2">Iniciar sesión</a>
+                        <a href="{% url 'anime:register' %}" class="btn btn-warning">Registrarse</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
 
     <!-- Main Content -->
-    <main class="main-content" style="margin: 0; padding: 0;">
-        {% block content %}
-        <!-- Content will be inserted here by child templates -->
-        {% endblock %}
+    <main class="flex-grow-1 py-4">
+        <div class="container">
+            {% block content %}
+            {% endblock %}
+        </div>
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container-fluid px-0">
-            <div class="footer-content">
-                <div class="footer-bottom">
-                    <div class="footer-copyright">
-                        &copy; {% now "Y" %} el pyme anime. Todos los derechos reservados.
-                    </div>
-                    <div class="footer-legal">
-                        <a href="#">Términos</a>
-                        <span class="divider">•</span>
-                        <a href="#">Privacidad</a>
+    <footer class="bg-dark text-white py-4 mt-auto">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>el pymeanime</h5>
+                    <p class="mb-0">Tu plataforma para ver y descubrir anime</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="social-links">
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-instagram"></i></a>
                     </div>
                 </div>
+            </div>
+            <hr class="my-3">
+            <div class="text-center">
+                <p class="mb-0">&copy; {% now "Y" %} el pymeanime. Todos los derechos reservados.</p>
             </div>
         </div>
     </footer>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Theme Script -->
     <script>
-      // Initialize particles.js if element exists
-      document.addEventListener('DOMContentLoaded', function() {
-        const particlesEl = document.getElementById('particles-js');
-        if (particlesEl) {
-          particlesJS('particles-js', {
-            particles: {
-              number: { value: 80, density: { enable: true, value_area: 800 } },
-              color: { value: '#d32f2f' },
-              shape: { type: 'circle' },
-              opacity: {
-                value: 0.5,
-                random: true,
-                anim: { enable: true, speed: 1, opacity_min: 0.1, sync: false }
-              },
-              size: {
-                value: 3,
-                random: true,
-                anim: { enable: true, speed: 2, size_min: 0.1, sync: false }
-              },
-              line_linked: {
-                enable: true,
-                distance: 150,
-                color: '#d32f2f',
-                opacity: 0.4,
-                width: 1
-              },
-              move: {
-                enable: true,
-                speed: 1,
-                direction: 'none',
-                random: false,
-                straight: false,
-                out_mode: 'out',
-                bounce: false,
-                attract: { enable: false, rotateX: 600, rotateY: 1200 }
-              }
-            },
-            interactivity: {
-              detect_on: 'canvas',
-              events: {
-                onhover: { enable: true, mode: 'grab' },
-                onclick: { enable: true, mode: 'push' },
-                resize: true
-              },
-              modes: {
-                grab: { distance: 140, line_linked: { opacity: 1 } },
-                push: { particles_nb: 4 }
-              }
-            },
-            retina_detect: true
-          });
-        }
-      });
+        // Theme Toggle Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const icon = themeToggle?.querySelector('i');
+            
+            // Check for saved theme preference or use system preference
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            let currentTheme = localStorage.getItem('theme') || 
+                             (prefersDarkScheme.matches ? 'dark' : 'light');
+            
+            // Apply the theme
+            document.documentElement.setAttribute('data-bs-theme', currentTheme);
+            
+            // Set initial icon
+            if (icon) {
+                icon.className = currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+            
+            // Toggle theme function
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    
+                    // Update theme
+                    document.documentElement.setAttribute('data-bs-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                    
+                    // Update icon
+                    if (icon) {
+                        icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+                    }
+                });
+            }
+        });
     </script>
-    <script src="{% static 'js/main.js' %}"></script>
-    <!-- Service Worker Registration (temporarily disabled) -->
-    <!-- <script>
-        // Service worker registration will be implemented in a future update
-    </script> -->
     
     {% block extra_js %}{% endblock %}
 </body>

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-lg mt-5">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4">Iniciar sesión</h2>
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        Tu nombre de usuario y contraseña no coinciden. Inténtalo de nuevo.
+                    </div>
+                    {% endif %}
+
+                    {% if next %}
+                        {% if user.is_authenticated %}
+                        <div class="alert alert-warning" role="alert">
+                            Tu cuenta no tiene acceso a esta página. Para continuar, inicia sesión con una cuenta que tenga acceso.
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info" role="alert">
+                            Por favor inicia sesión para ver esta página.
+                        </div>
+                        {% endif %}
+                    {% endif %}
+
+                    <form method="post" action="{% url 'anime:login' %}" class="mb-3">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">Nombre de usuario</label>
+                            <input type="text" name="username" class="form-control form-control-lg" id="id_username" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="id_password" class="form-label">Contraseña</label>
+                            <input type="password" name="password" class="form-control form-control-lg" id="id_password" required>
+                            <div class="form-text">
+                                <a href="{% url 'anime:password_reset' %}">¿Olvidaste tu contraseña?</a>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">Iniciar sesión</button>
+                            <input type="hidden" name="next" value="{{ next }}">
+                        </div>
+                    </form>
+                    
+                    <div class="text-center">
+                        <p class="mb-0">¿No tienes una cuenta? <a href="{% url 'anime:register' %}">Regístrate</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

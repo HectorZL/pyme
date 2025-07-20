@@ -7,6 +7,7 @@ from django.views.generic import RedirectView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('anime.urls')),  # Main anime app URLs
+    
     # Redirect root URL to the home page
     path('', RedirectView.as_view(url='/', permanent=False)),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + \

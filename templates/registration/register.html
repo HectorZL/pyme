@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg mt-5">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4">Crear una cuenta</h2>
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                {{ error }}
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" class="mb-3">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_username" class="form-label">Nombre de usuario</label>
+                                <input type="text" name="username" class="form-control form-control-lg" id="id_username" 
+                                       required autofocus>
+                                <div class="form-text">Requerido. 150 caracteres o menos. Letras, dígitos y @/./+/-/_ solamente.</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="id_email" class="form-label">Correo electrónico (opcional)</label>
+                                <input type="email" name="email" class="form-control form-control-lg" id="id_email">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="id_password1" class="form-label">Contraseña</label>
+                                <input type="password" name="password1" class="form-control form-control-lg" 
+                                       id="id_password1" required>
+                                <div class="form-text">
+                                    <ul class="small">
+                                        <li>Tu contraseña no puede ser muy similar a tu otra información personal.</li>
+                                        <li>Tu contraseña debe contener al menos 8 caracteres.</li>
+                                        <li>Tu contraseña no puede ser una contraseña de uso común.</li>
+                                        <li>Tu contraseña no puede ser enteramente numérica.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-4">
+                                <label for="id_password2" class="form-label">Confirmar contraseña</label>
+                                <input type="password" name="password2" class="form-control form-control-lg" 
+                                       id="id_password2" required>
+                                <div class="form-text">Ingresa la misma contraseña que antes, para verificación.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">Registrarse</button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center">
+                        <p class="mb-0">¿Ya tienes una cuenta? <a href="{% url 'anime:login' %}">Inicia sesión</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,203 +1,104 @@
 {% extends 'base.html' %}
-{% load static %}
 
-{% block title %}Mi Perfil - PYCTEM.ANIME{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/profile.css' %}">
-{% endblock %}
+{% block title %}Perfil de {{ user.username }} - el pyme anime{% endblock %}
 
 {% block content %}
-<!-- Profile Header -->
-<header class="profile-header">
-    <div class="profile-header-content">
-        <img src="https://via.placeholder.com/150/ff0000/ffffff?text=US" alt="User Avatar" class="profile-avatar">
-        <div class="profile-info">
-            <h1>Nombre de Usuario</h1>
-            <div class="profile-meta">
-                <span><i class="fas fa-user-friends"></i> Miembro desde: Ene 2023</span>
-                <span><i class="fas fa-flag"></i> Argentina</span>
-                <span><i class="fas fa-star"></i> Nivel: 5</span>
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="position-relative mb-3">
+                        <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=random&size=150&rounded=true" 
+                             alt="{{ user.username }}" class="rounded-circle img-thumbnail" style="width: 150px; height: 150px; object-fit: cover;">
+                        <div class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2" 
+                             style="width: 40px; height: 40px; transform: translate(-10px, -10px);">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                    </div>
+                    <h4 class="mb-1">{{ user.username }}</h4>
+                    <p class="text-muted mb-3">Miembro desde {{ user.date_joined|date:"F Y" }}</p>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-2"></i>Editar perfil
+                        </a>
+                        <a href="{% url 'anime:password_change' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-key me-2"></i>Cambiar contraseña
+                        </a>
+                    </div>
+                </div>
             </div>
-            <p>¡Bienvenido a tu perfil! Aquí puedes ver tu actividad y configurar tus preferencias.</p>
-            <div class="profile-actions">
-                <button class="btn btn-primary"><i class="fas fa-cog"></i> Editar Perfil</button>
-                <button class="btn btn-outline"><i class="fas fa-bell"></i> Notificaciones</button>
+            
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">Estadísticas</h6>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Animes vistos
+                        <span class="badge bg-primary rounded-pill">0</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        En mi lista
+                        <span class="badge bg-primary rounded-pill">0</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Comentarios
+                        <span class="badge bg-primary rounded-pill">0</span>
+                    </li>
+                </ul>
             </div>
         </div>
-    </div>
-</header>
-
-<!-- Profile Tabs -->
-<div class="profile-tabs">
-    <div class="tabs-container">
-        <div class="tab active" data-tab="overview">Resumen</div>
-        <div class="tab" data-tab="watching">Viendo</div>
-        <div class="tab" data-tab="completed">Completados</div>
-        <div class="tab" data-tab="planning">Planificados</div>
-        <div class="tab" data-tab="favorites">Favoritos</div>
-        <div class="tab" data-tab="settings">Ajustes</div>
-    </div>
-</div>
-
-<!-- Tab Content -->
-<div class="container">
-    <!-- Overview Tab -->
-    <div id="overview" class="tab-content active">
-        <h2 class="section-title">Resumen de Actividad</h2>
         
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value">42</div>
-                <div class="stat-label">Días en la plataforma</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">156</div>
-                <div class="stat-label">Horas vistas</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">24</div>
-                <div class="stat-label">Animes vistos</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">8.7</div>
-                <div class="stat-label">Puntuación media</div>
-            </div>
-        </div>
-
-        <!-- Recently Watched -->
-        <h3 class="section-title">Recientemente Vistos</h3>
-        <div class="anime-list">
-            {% for i in "123456"|make_list %}
-            <div class="anime-item">
-                <img src="https://via.placeholder.com/300x400/ff0000/ffffff?text=Anime+{{ i }}" alt="Anime {{ i }}">
-                <div class="anime-item-info">
-                    <h4 class="anime-item-title">Título del Anime {{ i }}</h4>
-                    <div class="anime-item-meta">
-                        <span>Ep. {{ i|add:12 }}</span>
-                        <span>Hace {{ i }}d</span>
-                    </div>
+        <!-- Main Content -->
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Información del perfil</h5>
                 </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- Watching Tab -->
-    <div id="watching" class="tab-content">
-        <h2 class="section-title">Viendo Actualmente</h2>
-        <div class="anime-list">
-            {% for i in "1234"|make_list %}
-            <div class="anime-item">
-                <img src="https://via.placeholder.com/300x400/ff0000/ffffff?text=Watching+{{ i }}" alt="Watching {{ i }}">
-                <div class="anime-item-info">
-                    <h4 class="anime-item-title">Anime en Progreso {{ i }}</h4>
-                    <div class="anime-item-meta">
-                        <span>Ep. {{ i|add:5 }}/24</span>
-                        <span>25%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-bar-fill" style="width: {{ i|add:2 }}0%;"></div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- Favorites Tab -->
-    <div id="favorites" class="tab-content">
-        <h2 class="section-title">Animes Favoritos</h2>
-        <div class="anime-list">
-            {% for i in "1238"|make_list %}
-            <div class="anime-item">
-                <img src="https://via.placeholder.com/300x400/ff0000/ffffff?text=Fav+{{ i }}" alt="Favorite {{ i }}">
-                <div class="anime-item-info">
-                    <h4 class="anime-item-title">Anime Favorito {{ i }}</h4>
-                    <div class="anime-item-meta">
-                        <span>TV • 24 eps</span>
-                        <span><i class="fas fa-star" style="color: #ffc107;"></i> 9.{{ i }}</span>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- Settings Tab -->
-    <div id="settings" class="tab-content">
-        <h2 class="section-title">Configuración de la Cuenta</h2>
-        <form class="settings-form">
-            <div class="form-group">
-                <label for="username">Nombre de Usuario</label>
-                <input type="text" id="username" class="form-control" value="UsuarioEjemplo">
-            </div>
-            
-            <div class="form-group">
-                <label for="email">Correo Electrónico</label>
-                <input type="email" id="email" class="form-control" value="usuario@ejemplo.com">
-            </div>
-            
-            <div class="form-group">
-                <label for="bio">Biografía</label>
-                <textarea id="bio" class="form-control" rows="4" placeholder="Cuéntanos sobre ti...">Apasionado del anime desde pequeño. Mis géneros favoritos son shonen y seinen.</textarea>
-            </div>
-            
-            <div class="form-group">
-                <label>Preferencias de Notificación</label>
-                <div class="notification-preferences">
-                    <label class="notification-option">
-                        <input type="checkbox" class="notification-checkbox" checked>
-                        Notificaciones por correo electrónico
-                    </label>
-                    <label class="notification-option">
-                        <input type="checkbox" class="notification-checkbox" checked>
-                        Notificaciones de nuevos episodios
-                    </label>
+                <div class="card-body">
+                    <form>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre de usuario</label>
+                                <input type="text" class="form-control" value="{{ user.username }}" disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Correo electrónico</label>
+                                <input type="email" class="form-control" value="{{ user.email|default:'No especificado' }}" disabled>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label">Biografía</label>
+                                <textarea class="form-control" rows="4" placeholder="Cuéntanos sobre ti..." disabled></textarea>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-primary">Guardar cambios</button>
+                        </div>
+                    </form>
                 </div>
             </div>
             
-            <button type="submit" class="btn-save">Guardar Cambios</button>
-        </form>
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Mi lista de anime</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center py-5">
+                        <i class="fas fa-tv fa-3x text-muted mb-3"></i>
+                        <h5>No has agregado ningún anime a tu lista</h5>
+                        <p class="text-muted">Explora nuestro catálogo y agrega tus animes favoritos</p>
+                        <a href="{% url 'anime:catalog' %}" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Explorar catálogo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Tab functionality
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', function() {
-            // Remove active class from all tabs and contents
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
-            // Add active class to clicked tab and corresponding content
-            this.classList.add('active');
-            const tabId = this.getAttribute('data-tab');
-            document.getElementById(tabId).classList.add('active');
-        });
-    });
-
-    // Avatar upload preview
-    const avatarInput = document.createElement('input');
-    avatarInput.type = 'file';
-    avatarInput.accept = 'image/*';
-    avatarInput.style.display = 'none';
-    
-    document.querySelector('.profile-avatar').addEventListener('click', () => {
-        avatarInput.click();
-    });
-    
-    avatarInput.addEventListener('change', function(e) {
-        if (e.target.files && e.target.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                document.querySelector('.profile-avatar').src = event.target.result;
-            };
-            reader.readAsDataURL(e.target.files[0]);
-        }
-    });
-</script>
 {% endblock %}
