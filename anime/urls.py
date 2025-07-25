@@ -10,15 +10,16 @@ urlpatterns = [
     path('', views.HomeView.as_view(), name='home'),
     path('catalog/', views.AnimeCatalogView.as_view(), name='catalog'),
     path('anime/<slug:slug>/', views.AnimeDetailView.as_view(), name='anime_detail'),
+    path('anime/<int:anime_id>/update_status/', views.update_anime_status, name='update_anime_status'),
+    path('anime/<int:anime_id>/toggle_favorite/', views.toggle_favorite, name='toggle_favorite'),
+    path('toggle-favorite/', views.toggle_favorite, name='toggle_favorite_legacy'),  # For backward compatibility
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path('register/', views.RegisterView.as_view(), name='register'),
     
     # User anime list management
     path('my-list/', views.UserAnimeListView.as_view(), name='user_anime_list'),
-    path('update-status/', views.update_anime_status, name='update_anime_status'),
-    path('update-anime-list/', views.update_anime_list, name='update_anime_list'),
+    path('favorites/', views.FavoritesView.as_view(), name='favorites'),
     path('api/list/<str:status>/', views.get_anime_list_by_status, name='get_anime_list_by_status'),
-    path('toggle-favorite/', views.toggle_favorite, name='toggle_favorite'),
     path('remove-from-list/', views.remove_from_list, name='remove_from_list'),
     
     # Authentication URLs

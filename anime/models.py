@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 from django.urls import reverse
+from django.utils import timezone
+import json
 
 class Genre(models.Model):
     """Model for anime genres"""
@@ -45,7 +47,7 @@ class Anime(models.Model):
     trailer_url = models.URLField('URL del tráiler', blank=True, null=True)
     status = models.CharField('Estado', max_length=10, choices=STATUS_CHOICES, default='upcoming')
     anime_type = models.CharField('Tipo', max_length=10, choices=TYPE_CHOICES, default='tv')
-    episodes = models.PositiveIntegerField('Número de episodios', default=0)
+    episode_count = models.PositiveIntegerField('Número de episodios', default=0)  
     duration = models.PositiveIntegerField('Duración por episodio (minutos)', default=24)
     rating = models.FloatField('Puntuación', default=0.0)
     genres = models.ManyToManyField(Genre, related_name='animes', verbose_name='Géneros')
@@ -66,28 +68,57 @@ class Anime(models.Model):
     def get_absolute_url(self):
         return reverse('anime:anime_detail', kwargs={'slug': self.slug})
     
+    def get_average_rating(self):
+        """Calculate average rating from user scores"""
+        from django.db.models import Avg
+        return self.user_lists.aggregate(avg_rating=Avg('score'))['avg_rating'] or 0.0
+    
     class Meta:
         ordering = ['-created_at']
         verbose_name = 'Anime'
         verbose_name_plural = 'Animes'
 
+class UserProfile(models.Model):
+    """Extended user profile model"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    bio = models.TextField('Biografía', blank=True, null=True)
+    avatar = models.ImageField('Avatar', upload_to='avatars/', blank=True, null=True)
+    banner = models.ImageField('Banner', upload_to='banners/', blank=True, null=True)
+    birth_date = models.DateField('Fecha de nacimiento', blank=True, null=True)
+    location = models.CharField('Ubicación', max_length=100, blank=True, null=True)
+    website = models.URLField('Sitio web', blank=True, null=True)
+    social_media = models.JSONField('Redes sociales', default=dict, blank=True)
+    email_verified = models.BooleanField('Correo verificado', default=False)
+    preferences = models.JSONField('Preferencias', default=dict, blank=True)
+    
+    def __str__(self):
+        return f"Perfil de {self.user.username}"
+    
+    def save(self, *args, **kwargs):
+        if not self.social_media:
+            self.social_media = {}
+        super().save(*args, **kwargs)
+
 class UserAnimeList(models.Model):
     """Model to track user's anime lists"""
     LIST_CHOICES = [
-        ('watching', 'Viendo'),
-        ('completed', 'Completado'),
-        ('plan_to_watch', 'Planeo ver'),
-        ('on_hold', 'En pausa'),
-        ('dropped', 'Abandonado'),
+        ('por_ver', 'Por ver'),
+        ('viendo', 'Viendo'),
+        ('finalizado', 'Finalizado'),
+        ('en_pausa', 'En pausa'),
+        ('abandonado', 'Abandonado'),
     ]
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='anime_lists', verbose_name='Usuario')
     anime = models.ForeignKey(Anime, on_delete=models.CASCADE, related_name='user_lists', verbose_name='Anime')
-    status = models.CharField('Estado', max_length=15, choices=LIST_CHOICES)
-    score = models.PositiveIntegerField('Puntuación (0-10)', default=0, blank=True, null=True)
+    status = models.CharField('Estado', max_length=15, choices=LIST_CHOICES, default='por_ver')
+    score = models.PositiveIntegerField('Puntuación (0-10)', blank=True, null=True)
     progress = models.PositiveIntegerField('Episodios vistos', default=0)
     notes = models.TextField('Notas', blank=True, null=True)
     is_favorite = models.BooleanField('Favorito', default=False)
+    start_date = models.DateField('Fecha de inicio', blank=True, null=True)
+    finish_date = models.DateField('Fecha de finalización', blank=True, null=True)
+    rewatch_count = models.PositiveIntegerField('Veces visto', default=0)
     updated_at = models.DateTimeField('Última actualización', auto_now=True)
     created_at = models.DateTimeField('Fecha de creación', auto_now_add=True)
     
@@ -99,3 +130,134 @@ class UserAnimeList(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.anime.title} ({self.get_status_display()})"
+    
+    def save(self, *args, **kwargs):
+        # Update finish date when status changes to completed
+        if self.status == 'finalizado' and not self.finish_date:
+            self.finish_date = timezone.now().date()
+        super().save(*args, **kwargs)
+
+class Episode(models.Model):
+    """Model for anime episodes"""
+    anime = models.ForeignKey(Anime, on_delete=models.CASCADE, related_name='episode_list')
+    number = models.PositiveIntegerField('Número de episodio')
+    title = models.CharField('Título', max_length=200)
+    description = models.TextField('Descripción', blank=True, null=True)
+    duration = models.PositiveIntegerField('Duración (minutos)', default=24)
+    air_date = models.DateField('Fecha de emisión', blank=True, null=True)
+    video_url = models.URLField('URL del vídeo', blank=True, null=True)
+    thumbnail = models.ImageField('Miniatura', upload_to='episode_thumbnails/', blank=True, null=True)
+    created_at = models.DateTimeField('Fecha de creación', auto_now_add=True)
+    updated_at = models.DateTimeField('Última actualización', auto_now=True)
+    
+    class Meta:
+        ordering = ['number']
+        unique_together = ('anime', 'number')
+        verbose_name = 'Episodio'
+        verbose_name_plural = 'Episodios'
+    
+    def __str__(self):
+        return f"{self.anime.title} - Episodio {self.number}: {self.title}"
+
+class Comment(models.Model):
+    """Model for user comments on anime"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='anime_comments')
+    anime = models.ForeignKey(Anime, on_delete=models.CASCADE, related_name='comments')
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+    content = models.TextField('Contenido')
+    is_spoiler = models.BooleanField('Contiene spoilers', default=False)
+    is_edited = models.BooleanField('Editado', default=False)
+    likes = models.ManyToManyField(User, related_name='liked_comments', blank=True)
+    dislikes = models.ManyToManyField(User, related_name='disliked_comments', blank=True)
+    created_at = models.DateTimeField('Fecha de creación', auto_now_add=True)
+    updated_at = models.DateTimeField('Última actualización', auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Comentario'
+        verbose_name_plural = 'Comentarios'
+    
+    def __str__(self):
+        return f"Comentario de {self.user.username} en {self.anime.title}"
+    
+    def save(self, *args, **kwargs):
+        if self.pk:  # If the comment already exists
+            self.is_edited = True
+        super().save(*args, **kwargs)
+    
+    def get_like_count(self):
+        return self.likes.count()
+    
+    def get_dislike_count(self):
+        return self.dislikes.count()
+
+class WatchHistory(models.Model):
+    """Model to track user's watched episodes"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='watch_history')
+    episode = models.ForeignKey(Episode, on_delete=models.CASCADE, related_name='watch_history')
+    anime = models.ForeignKey(Anime, on_delete=models.CASCADE, related_name='watch_history')
+    watched_at = models.DateTimeField('Visto el', auto_now_add=True)
+    progress = models.PositiveIntegerField('Progreso (segundos)', default=0)
+    is_completed = models.BooleanField('Completado', default=False)
+    
+    class Meta:
+        ordering = ['-watched_at']
+        verbose_name = 'Historial de visualización'
+        verbose_name_plural = 'Historial de visualizaciones'
+        unique_together = ('user', 'episode')
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.episode.anime.title} Ep. {self.episode.number}"
+
+class Notification(models.Model):
+    """Model for user notifications"""
+    NOTIFICATION_TYPES = [
+        ('comment', 'Nuevo comentario'),
+        ('reply', 'Respuesta a tu comentario'),
+        ('like', 'Me gusta en tu comentario'),
+        ('follow', 'Nuevo seguidor'),
+        ('system', 'Notificación del sistema'),
+        ('anime_update', 'Actualización de anime'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    notification_type = models.CharField('Tipo', max_length=20, choices=NOTIFICATION_TYPES)
+    message = models.TextField('Mensaje')
+    is_read = models.BooleanField('Leído', default=False)
+    related_id = models.PositiveIntegerField('ID relacionado', blank=True, null=True)
+    created_at = models.DateTimeField('Fecha de creación', auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Notificación'
+        verbose_name_plural = 'Notificaciones'
+    
+    def __str__(self):
+        return f"{self.get_notification_type_display()} - {self.user.username}"
+    
+    def mark_as_read(self):
+        self.is_read = True
+        self.save(update_fields=['is_read'])
+    
+    @classmethod
+    def create_notification(cls, user, notification_type, message, related_id=None):
+        """Helper method to create notifications"""
+        return cls.objects.create(
+            user=user,
+            notification_type=notification_type,
+            message=message,
+            related_id=related_id
+        )
+
+# Signals to create/update user profile when User is created/updated
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()

@@ -23,32 +23,6 @@
                                 <span>Imagen no disponible</span>
                             </div>
                         {% endif %}
-                        
-                        {% if user.is_authenticated %}
-                            <div class="d-flex gap-2 mt-3">
-                                <div class="btn-group flex-grow-1" role="group">
-                                    <button type="button" class="btn {% if user_status %}btn-{{ user_status }}{% else %}btn-outline-primary{% endif %} add-to-list-btn" 
-                                            data-anime-id="{{ anime.id }}">
-                                        {% if user_status %}
-                                            {{ user_status|title }}
-                                        {% else %}
-                                            Añadir a mi lista
-                                        {% endif %}
-                                    </button>
-                                </div>
-                                
-                                <button class="btn btn-outline-danger favorite-btn {% if is_favorite %}active{% endif %}" 
-                                        data-anime-id="{{ anime.id }}" 
-                                        title="{% if is_favorite %}Quitar de favoritos{% else %}Añadir a favoritos{% endif %}">
-                                    <i class="fas fa-heart"></i>
-                                </button>
-                            </div>
-                        {% else %}
-                            <a href="{% url 'anime:login' %}?next={{ request.path }}" 
-                               class="btn btn-outline-primary w-100 mt-3">
-                                Inicia sesión para añadir a tu lista
-                            </a>
-                        {% endif %}
                     </div>
                 </div>
                 
@@ -58,29 +32,93 @@
                         
                         <div class="meta-info mb-4">
                             <span class="badge bg-primary me-2">{{ anime.get_anime_type_display }}</span>
-                            <span class="me-3"><i class="fas fa-tv me-1"></i> {{ anime.episodes }} episodios</span>
-                            <span class="me-3"><i class="far fa-calendar-alt me-1"></i> {{ anime.year }}</span>
-                            <span class="me-3"><i class="fas fa-star text-warning me-1"></i> {{ anime.rating|default:"N/A" }}</span>
-                            <span class="badge bg-{{ anime.status }}">{{ anime.get_status_display }}</span>
+                            <span class="me-2"><i class="fas fa-calendar-alt me-1"></i> {{ anime.year }}</span>
+                            <span class="me-2"><i class="fas fa-tv me-1"></i> {{ anime.episode_count }} episodios</span>
+                            <span class="me-2"><i class="fas fa-clock me-1"></i> {{ anime.duration }} min</span>
+                            <span class="badge bg-{% if anime.status == 'airing' %}success{% elif anime.status == 'completed' %}secondary{% else %}info{% endif %}">
+                                {{ anime.get_status_display }}
+                            </span>
+                        </div>
+
+                        {% if user.is_authenticated %}
+                            <!-- Moved status dropdown and favorite button here -->
+                            <div class="d-flex gap-2 mb-3">
+                                <!-- Add to List Button -->
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn {% if user_status %}{% if user_status == 'por_ver' %}btn-outline-primary{% elif user_status == 'viendo' %}btn-primary{% elif user_status == 'finalizado' %}btn-success{% else %}btn-secondary{% endif %}{% else %}btn-outline-primary{% endif %} dropdown-toggle" 
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                        {% if user_status %}
+                                            {{ user_status|title }}
+                                        {% else %}
+                                            Añadir a mi lista
+                                        {% endif %}
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        {% for status, label in list_choices %}
+                                            <li><a class="dropdown-item {% if user_status == status %}active{% endif %}" 
+                                                  href="#" data-status="{{ status }}">{{ label }}</a></li>
+                                        {% endfor %}
+                                        {% if user_status %}
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger" href="#" data-status="remove">Quitar de mi lista</a></li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                                
+                                <!-- Favorite Button -->
+                                <button class="btn {% if is_favorite %}btn-warning{% else %}btn-outline-warning{% endif %} favorite-btn" 
+                                        data-anime-id="{{ anime.id }}" 
+                                        title="{% if is_favorite %}Quitar de favoritos{% else %}Añadir a favoritos{% endif %}">
+                                    <i class="fas fa-star"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Moved progress tracker here -->
+                            {% if user_status %}
+                            <div class="progress-tracker mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>Progreso: {{ user_progress }} / {{ anime.episode_count|default:'?' }}</small>
+                                    <small><span class="text-muted">Puntuación:</span> 
+                                        <span class="fw-bold">{{ user_score|default:'-' }}/10</span>
+                                    </small>
+                                </div>
+                                <div class="progress" style="height: 5px;">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {% widthratio user_progress anime.episode_count|default:1 100 %}%" 
+                                         aria-valuenow="{{ user_progress }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="{{ anime.episode_count|default:1 }}">
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endif %}
+                        
+                        <div class="rating mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="rating-stars me-2">
+                                    {% for i in "12345" %}
+                                        <i class="fas fa-star {% if forloop.counter <= avg_rating|floatformat:0 %}text-warning{% else %}text-secondary{% endif %}"></i>
+                                    {% endfor %}
+                                </div>
+                                <span class="fw-bold me-2">{{ avg_rating|default:'-' }}/5</span>
+                                <small class="text-muted">({{ rating_count }} votos)</small>
+                            </div>
                         </div>
                         
-                        <div class="genres mb-4">
+                        <div class="genres mb-3">
                             {% for genre in anime.genres.all %}
-                                <a href="?genre={{ genre.id }}" class="badge bg-secondary text-decoration-none me-1">
-                                    {{ genre.name }}
-                                </a>
+                                <a href="#" class="badge bg-secondary text-decoration-none me-1">{{ genre.name }}</a>
                             {% endfor %}
                         </div>
                         
-                        {% if anime.studio %}
-                            <p class="mb-3"><strong>Estudio:</strong> {{ anime.studio }}</p>
+                        {% if anime.trailer_url %}
+                        <button type="button" class="btn btn-outline-light me-2 mb-2" data-bs-toggle="modal" data-bs-target="#trailerModal">
+                            <i class="fas fa-play me-1"></i> Ver tráiler
+                        </button>
                         {% endif %}
                         
-                        {% if anime.trailer_url %}
-                            <button type="button" class="btn btn-danger mb-4" data-bs-toggle="modal" data-bs-target="#trailerModal">
-                                <i class="fab fa-youtube me-2"></i> Ver tráiler
-                            </button>
-                        {% endif %}
+                        <p class="lead mt-3">{{ anime.description|default:"No hay descripción disponible." }}</p>
                     </div>
                 </div>
             </div>
@@ -91,34 +129,58 @@
     <div class="container py-4">
         <div class="row">
             <div class="col-lg-8">
-                <!-- Description -->
+                <!-- Episodes -->
+                {% if episodes %}
                 <div class="card mb-4">
-                    <div class="card-body">
-                        <h3 class="card-title">Sinopsis</h3>
-                        {% if anime.description %}
-                            <p class="card-text">{{ anime.description|linebreaksbr }}</p>
-                        {% else %}
-                            <p class="text-muted">No hay sinopsis disponible.</p>
-                        {% endif %}
+                    <div class="card-header">
+                        <h5 class="mb-0">Episodios</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        {% for episode in episodes %}
+                        <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Episodio {{ episode.number }}: {{ episode.title }}</h6>
+                                <small class="text-muted">{{ episode.air_date|date:"d M Y" }}</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ episode.duration }} min</span>
+                        </a>
+                        {% endfor %}
                     </div>
                 </div>
+                {% endif %}
                 
-                <!-- Episodes -->
+                <!-- Comments Section -->
                 <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Comentarios</h5>
+                    </div>
                     <div class="card-body">
-                        <h3 class="card-title mb-4">Episodios</h3>
-                        {% if anime.episodes > 0 %}
-                            <div class="episode-list">
-                                {% for i in "x"|ljust:anime.episodes %}
-                                    <a href="#" class="episode-item">
-                                        <span class="episode-number">Episodio {{ forloop.counter }}</span>
-                                        <span class="episode-title">Título del episodio</span>
-                                    </a>
-                                {% endfor %}
+                        {% if user.is_authenticated %}
+                        <form class="mb-4" id="comment-form">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <textarea class="form-control" rows="3" placeholder="Escribe tu comentario..." required></textarea>
                             </div>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="spoiler-check">
+                                <label class="form-check-label" for="spoiler-check">Contiene spoilers</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary mt-2">Comentar</button>
+                        </form>
                         {% else %}
-                            <p class="text-muted">Aún no hay episodios disponibles.</p>
+                        <div class="text-center py-3">
+                            <p>Inicia sesión para dejar un comentario.</p>
+                            <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Iniciar sesión</a>
+                        </div>
                         {% endif %}
+                        
+                        <div id="comments-container">
+                            {% for comment in comments %}
+                                {% include 'anime/partials/comment.html' with comment=comment %}
+                            {% empty %}
+                                <p class="text-muted text-center py-3">No hay comentarios aún. ¡Sé el primero en comentar!</p>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -128,71 +190,62 @@
                 <div class="card mb-4">
                     <div class="card-body">
                         <h5 class="card-title">Detalles</h5>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>Estado</span>
-                                <span class="badge bg-{{ anime.status }}">{{ anime.get_status_display }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>Episodios</span>
-                                <span>{{ anime.episodes|default:"Desconocido" }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>Duración</span>
-                                <span>{{ anime.duration }} min</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>Estreno</span>
-                                <span>{{ anime.year|default:"Desconocido" }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>Temporada</span>
-                                <span>{{ anime.season|default:"Desconocida" }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>Estudio</span>
-                                <span>{{ anime.studio|default:"Desconocido" }}</span>
-                            </li>
-                        </ul>
+                        <dl class="mb-0">
+                            {% if anime.studio %}
+                            <dt>Estudio</dt>
+                            <dd>{{ anime.studio }}</dd>
+                            {% endif %}
+                            
+                            <dt>Estado</dt>
+                            <dd>{{ anime.get_status_display }}</dd>
+                            
+                            <dt>Tipo</dt>
+                            <dd>{{ anime.get_anime_type_display }}</dd>
+                            
+                            <dt>Episodios</dt>
+                            <dd>{{ anime.episode_count|default:"-" }}</dd>
+                            
+                            <dt>Duración</dt>
+                            <dd>{{ anime.duration }} min por episodio</dd>
+                            
+                            <dt>Estreno</dt>
+                            <dd>{{ anime.year }}</dd>
+                            
+                            {% if anime.genres.exists %}
+                            <dt>Géneros</dt>
+                            <dd>
+                                {% for genre in anime.genres.all %}
+                                    <span class="badge bg-secondary">{{ genre.name }}</span>
+                                {% endfor %}
+                            </dd>
+                            {% endif %}
+                        </dl>
                     </div>
                 </div>
                 
                 <!-- Related Anime -->
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Animes Relacionados</h5>
-                        <div class="row">
-                            {% if anime.genres.exists %}
-                                {% with genre=anime.genres.first %}
-                                    {% for related in genre.anime_set.all|slice:":4" %}
-                                        {% if related.id != anime.id %}
-                                            <div class="col-6 col-sm-4 col-lg-6 mb-3">
-                                                <a href="{% url 'anime:anime_detail' related.slug %}" class="text-decoration-none">
-                                                    {% if related.image %}
-                                                        <img src="{{ related.image.url }}" class="img-fluid rounded mb-1" alt="{{ related.title }}">
-                                                    {% else %}
-                                                        <div class="no-image-placeholder small">
-                                                            <i class="fas fa-image"></i>
-                                                        </div>
-                                                    {% endif %}
-                                                    <div class="small text-truncate">{{ related.title }}</div>
-                                                </a>
-                                            </div>
-                                        {% endif %}
-                                    {% empty %}
-                                        <div class="col-12">
-                                            <p class="text-muted small mb-0">No se encontraron animes relacionados.</p>
-                                        </div>
-                                    {% endfor %}
-                                {% endwith %}
-                            {% else %}
-                                <div class="col-12">
-                                    <p class="text-muted small mb-0">No hay géneros disponibles para mostrar animes relacionados.</p>
+                {% if related_anime %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Anime relacionado</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        {% for related in related_anime %}
+                        <a href="{{ related.get_absolute_url }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex align-items-center">
+                                {% if related.image %}
+                                <img src="{{ related.image.url }}" alt="{{ related.title }}" class="rounded me-2" width="40" height="60" style="object-fit: cover;">
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-1">{{ related.title }}</h6>
+                                    <small class="text-muted">{{ related.get_anime_type_display }} · {{ related.year }}</small>
                                 </div>
-                            {% endif %}
-                        </div>
+                            </div>
+                        </a>
+                        {% endfor %}
                     </div>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -201,237 +254,209 @@
 <!-- Trailer Modal -->
 {% if anime.trailer_url %}
 <div class="modal fade" id="trailerModal" tabindex="-1" aria-labelledby="trailerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content bg-dark">
-            <div class="modal-header border-0">
-                <h5 class="modal-title text-white" id="trailerModalLabel">Tráiler de {{ anime.title }}</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="trailerModalLabel">Tráiler de {{ anime.title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-0">
+            <div class="modal-body">
                 <div class="ratio ratio-16x9">
-                    <iframe src="{{ anime.trailer_url|safe }}" 
-                            title="{{ anime.title }} - Tráiler" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                            allowfullscreen>
-                    </iframe>
+                    <iframe src="{{ anime.trailer_url|safe }}" title="{{ anime.title }} - Tráiler" 
+                            frameborder="0" allowfullscreen></iframe>
                 </div>
             </div>
         </div>
     </div>
 </div>
 {% endif %}
-
-<!-- Add to List Modal -->
-<div class="modal fade" id="addToListModal" tabindex="-1" aria-labelledby="addToListModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addToListModalLabel">Añadir a Mi Lista</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <p class="mb-3">Selecciona cómo quieres añadir este anime a tu lista:</p>
-                <div class="list-group">
-                    {% for status in UserAnimeList.LIST_CHOICES %}
-                        <a href="#" class="list-group-item list-group-item-action status-option" 
-                           data-status="{{ status.0 }}">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">{{ status.1 }}</h6>
-                                {% if status.0 == 'plan_to_watch' %}
-                                    <small><i class="fas fa-clock"></i></small>
-                                {% elif status.0 == 'watching' %}
-                                    <small><i class="fas fa-tv"></i></small>
-                                {% elif status.0 == 'completed' %}
-                                    <small><i class="fas fa-check-circle"></i></small>
-                                {% elif status.0 == 'on_hold' %}
-                                    <small><i class="fas fa-pause-circle"></i></small>
-                                {% elif status.0 == 'dropped' %}
-                                    <small><i class="fas fa-times-circle"></i></small>
-                                {% endif %}
-                            </div>
-                            <small class="text-muted">
-                                {% if status.0 == 'plan_to_watch' %}Planificas ver este anime más tarde
-                                {% elif status.0 == 'watching' %}Actualmente estás viendo este anime
-                                {% elif status.0 == 'completed' %}Has terminado de ver este anime
-                                {% elif status.0 == 'on_hold' %}Has pausado temporalmente este anime
-                                {% elif status.0 == 'dropped' %}Has dejado de ver este anime
-                                {% endif %}
-                            </small>
-                        </a>
-                    {% endfor %}
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Variables to store the current anime being processed
-    let currentAnimeId = null;
+// Update anime status
+function updateAnimeStatus(animeId, status) {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     
-    // Initialize the modal
-    const addToListModal = new bootstrap.Modal(document.getElementById('addToListModal'));
-    
-    // Handle click on "Add to My List" button
-    document.querySelectorAll('.add-to-list-btn').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            currentAnimeId = this.dataset.animeId;
-            addToListModal.show();
-        });
-    });
-    
-    // Handle status selection in the modal
-    document.querySelectorAll('.status-option').forEach(option => {
-        option.addEventListener('click', function(e) {
-            e.preventDefault();
-            const status = this.dataset.status;
+    fetch(`/anime/${animeId}/update_status/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: new URLSearchParams({
+            'status': status
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showToast('success', data.message);
             
-            if (status && currentAnimeId) {
-                updateAnimeStatus(currentAnimeId, status);
-                addToListModal.hide();
+            // Update UI based on action
+            if (data.action === 'removed') {
+                // Reset status buttons
+                const dropdown = document.querySelector('.dropdown-toggle');
+                dropdown.textContent = 'Añadir a mi lista';
+                dropdown.className = 'btn btn-outline-primary dropdown-toggle w-100';
+                
+                // Remove progress tracker
+                const progressTracker = document.querySelector('.progress-tracker');
+                if (progressTracker) {
+                    progressTracker.remove();
+                }
+            } else {
+                // Update status button
+                const dropdown = document.querySelector('.dropdown-toggle');
+                dropdown.textContent = data.user_status.charAt(0).toUpperCase() + data.user_status.slice(1);
+                
+                // Update button style based on status
+                let btnClass = 'btn-outline-primary';
+                if (data.user_status === 'viendo') {
+                    btnClass = 'btn-primary';
+                } else if (data.user_status === 'finalizado') {
+                    btnClass = 'btn-success';
+                }
+                dropdown.className = `btn ${btnClass} dropdown-toggle w-100`;
+                
+                // Update or create progress tracker
+                updateProgressTracker(anime.episode_count, 0);
             }
-        });
+            
+            // Reload the page to show updated data
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showToast('error', data.message || 'Error al actualizar el estado');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Error de conexión');
     });
-    
-    // Function to update anime status
-    function updateAnimeStatus(animeId, status) {
-        fetch('{% url "anime:update_anime_list" %}', {
+}
+
+// Toggle favorite status
+document.querySelectorAll('.favorite-btn').forEach(button => {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+        const animeId = this.dataset.animeId;
+        const isFavorite = this.classList.contains('btn-warning');
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch(`/anime/${animeId}/toggle_favorite/`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': '{{ csrf_token }}'
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({
-                anime_id: animeId,
-                action: 'update_status',
-                status: status
+            body: new URLSearchParams({
+                'is_favorite': !isFavorite
             })
         })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                // Update the UI to reflect the new status
-                const button = document.querySelector(`.add-to-list-btn[data-anime-id="${animeId}"]`);
-                if (button) {
-                    button.textContent = data.new_status ? data.new_status.charAt(0).toUpperCase() + data.new_status.slice(1) : 'Añadir a mi lista';
-                    
-                    // Remove all status classes and add the appropriate one
-                    const statusClasses = ['btn-outline-primary', 'btn-plan_to_watch', 'btn-watching', 'btn-completed', 'btn-on_hold', 'btn-dropped'];
-                    button.classList.remove(...statusClasses);
-                    
-                    if (data.new_status) {
-                        button.classList.add(`btn-${data.new_status}`);
-                    } else {
-                        button.classList.add('btn-outline-primary');
-                    }
-                }
-                
-                // Show success message
+                this.classList.toggle('btn-warning');
+                this.classList.toggle('btn-outline-warning');
+                this.title = data.is_favorite ? 'Quitar de favoritos' : 'Añadir a favoritos';
                 showToast('success', data.message);
-                
-                // Reload the page to show the updated status
-                setTimeout(() => window.location.reload(), 1000);
             } else {
-                showToast('error', data.message || 'Error al actualizar la lista');
+                showToast('error', data.message || 'Error al actualizar favoritos');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showToast('error', 'Error al actualizar la lista');
-        });
-    }
-    
-    // Toggle favorite status
-    document.querySelectorAll('.favorite-btn').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const animeId = this.dataset.animeId;
-            
-            fetch('{% url "anime:update_anime_list" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                    anime_id: animeId,
-                    action: 'toggle_favorite'
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    // Toggle active class
-                    this.classList.toggle('active');
-                    
-                    // Update tooltip
-                    this.title = this.classList.contains('active') ? 'Quitar de favoritos' : 'Añadir a favoritos';
-                    
-                    // Show success message
-                    showToast('success', data.message);
-                    
-                    // Reload the page to show the updated status
-                    setTimeout(() => window.location.reload(), 1000);
-                } else {
-                    showToast('error', data.message || 'Error al actualizar favoritos');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('error', 'Error al actualizar favoritos');
-            });
+            showToast('error', 'Error de conexión');
         });
     });
+});
+
+// Handle status dropdown clicks
+document.querySelectorAll('.dropdown-item[data-status]').forEach(item => {
+    item.addEventListener('click', function(e) {
+        e.preventDefault();
+        const status = this.dataset.status;
+        updateAnimeStatus({{ anime.id }}, status);
+    });
+});
+
+// Update progress tracker
+function updateProgressTracker(totalEpisodes, watchedEpisodes) {
+    let progressTracker = document.querySelector('.progress-tracker');
     
-    // Show toast notifications
-    function showToast(type, message) {
-        // Create toast element if it doesn't exist
-        let toastContainer = document.querySelector('.toast-container');
-        if (!toastContainer) {
-            toastContainer = document.createElement('div');
-            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-            document.body.appendChild(toastContainer);
+    if (!progressTracker && totalEpisodes > 0) {
+        // Create progress tracker if it doesn't exist
+        const buttonGroup = document.querySelector('.btn-group');
+        if (buttonGroup) {
+            const trackerHtml = `
+                <div class="progress-tracker mt-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small>Progreso: ${watchedEpisodes} / ${totalEpisodes}</small>
+                        <small><span class="text-muted">Puntuación:</span> <span class="fw-bold">-</span></small>
+                    </div>
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: ${(watchedEpisodes / totalEpisodes) * 100}%" 
+                             aria-valuenow="${watchedEpisodes}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="${totalEpisodes}">
+                        </div>
+                    </div>
+                </div>
+            `;
+            buttonGroup.insertAdjacentHTML('afterend', trackerHtml);
+        }
+    } else if (progressTracker) {
+        // Update existing progress tracker
+        const progressText = progressTracker.querySelector('small:first-child');
+        const progressBar = progressTracker.querySelector('.progress-bar');
+        
+        if (progressText) {
+            progressText.textContent = `Progreso: ${watchedEpisodes} / ${totalEpisodes}`;
         }
         
-        const toastId = 'toast-' + Date.now();
-        const toastClass = type === 'success' ? 'text-bg-success' : 'text-bg-danger';
-        
-        const toast = document.createElement('div');
-        toast.className = `toast show ${toastClass}`;
-        toast.role = 'alert';
-        toast.setAttribute('aria-live', 'assertive');
-        toast.setAttribute('aria-atomic', 'true');
-        toast.id = toastId;
-        
-        toast.innerHTML = `
+        if (progressBar) {
+            const progressPercent = totalEpisodes > 0 ? (watchedEpisodes / totalEpisodes) * 100 : 0;
+            progressBar.style.width = `${progressPercent}%`;
+            progressBar.setAttribute('aria-valuenow', watchedEpisodes);
+        }
+    }
+}
+
+// Show toast notifications
+function showToast(type, message) {
+    const toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) return;
+    
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body">
                     ${message}
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-        `;
-        
-        toastContainer.appendChild(toast);
-        
-        // Auto remove toast after 3 seconds
-        setTimeout(() => {
-            const toastElement = document.getElementById(toastId);
-            if (toastElement) {
-                toastElement.remove();
-            }
-        }, 3000);
-    }
+        </div>
+    `;
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 3000 });
+    toast.show();
+    
+    // Remove toast after it's hidden
+    toastElement.addEventListener('hidden.bs.toast', function() {
+        toastElement.remove();
+    });
+}
+
+// Initialize tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
 });
 </script>
 {% endblock %}

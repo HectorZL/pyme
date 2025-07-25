@@ -311,248 +311,210 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle tab state in URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const status = urlParams.get('status');
-    
-    if (status) {
-        const tabElement = document.querySelector(`[data-bs-target="#${status}"]`);
-        if (tabElement) {
-            const tab = new bootstrap.Tab(tabElement);
-            tab.show();
+// Add CSRF token handling
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
         }
     }
-    
-    // Update URL when tab changes
-    const tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
-    tabEls.forEach(tabEl => {
-        tabEl.addEventListener('shown.bs.tab', function (event) {
-            const status = event.target.getAttribute('data-bs-target').substring(1);
-            const url = new URL(window.location);
-            
-            if (status === 'watching') {
-                url.searchParams.delete('status');
-            } else {
-                url.searchParams.set('status', status);
-            }
-            
-            window.history.pushState({}, '', url);
-        });
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
+// Initialize modal
+const animeStatusModal = new bootstrap.Modal(document.getElementById('animeStatusModal'));
+
+// Handle tab state in URL
+const urlParams = new URLSearchParams(window.location.search);
+const status = urlParams.get('status');
+
+if (status) {
+    const tab = document.querySelector(`[data-bs-target="#${status}"]`);
+    if (tab) {
+        const tabInstance = new bootstrap.Tab(tab);
+        tabInstance.show();
+    }
+}
+
+// Update URL when tab changes
+document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+    tab.addEventListener('shown.bs.tab', function (e) {
+        const tabId = e.target.getAttribute('data-bs-target').substring(1);
+        const url = new URL(window.location);
+        url.searchParams.set('status', tabId);
+        window.history.pushState({}, '', url);
     });
-    
-    // Favorite button handler
-    document.querySelectorAll('.favorite-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const animeId = this.dataset.animeId;
-            const isFavorite = this.classList.contains('active');
-            const icon = this.querySelector('i');
-            
-            // Toggle visual state immediately for better UX
-            this.classList.toggle('active');
-            this.classList.toggle('btn-outline-danger');
-            this.classList.toggle('btn-danger');
-            
-            // Send AJAX request to update favorite status
-            fetch('{% url "anime:toggle_favorite" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFTOKEN': '{{ csrf_token }}'
-                },
-                body: `anime_id=${animeId}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    // Update favorite count in the tab
-                    const favBadge = document.querySelector('#favorites-tab .badge');
-                    if (favBadge) {
-                        favBadge.textContent = data.favorites_count;
-                    }
-                    
-                    // Show success message
-                    const alert = document.createElement('div');
-                    alert.className = 'alert alert-success alert-dismissible fade show mt-3';
-                    alert.role = 'alert';
-                    alert.innerHTML = `
-                        ${isFavorite ? 'Eliminado de favoritos' : 'Añadido a favoritos'}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    `;
-                    document.querySelector('.container.mt-4').prepend(alert);
-                    
-                    // If we're on the favorites tab, remove the card if unfavoriting
-                    if (isFavorite && document.querySelector('#favorites-tab').classList.contains('active')) {
-                        const card = this.closest('.col');
-                        if (card) {
-                            card.remove();
-                            // If no more favorites, show empty state
-                            if (!document.querySelector('#favorites .anime-card')) {
-                                const emptyState = `
-                                    <div class="text-center py-5">
-                                        <i class="fas fa-heart fa-4x text-muted mb-3"></i>
-                                        <h3 class="h4">No tienes animes favoritos</h3>
-                                        <p class="text-muted">Haz clic en el corazón en cualquier tarjeta de anime para añadirlo a tus favoritos.</p>
-                                    </div>
-                                `;
-                                document.querySelector('#favorites').innerHTML = emptyState;
-                            }
-                        }
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Revert visual state on error
-                this.classList.toggle('active');
-                this.classList.toggle('btn-outline-danger');
-                this.classList.toggle('btn-danger');
-                
-                // Show error message
-                const alert = document.createElement('div');
-                alert.className = 'alert alert-danger alert-dismissible fade show mt-3';
-                alert.role = 'alert';
-                alert.innerHTML = `
-                    Error al actualizar favoritos. Por favor, inténtalo de nuevo.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                `;
-                document.querySelector('.container.mt-4').prepend(alert);
-            });
-        });
-    });
-    
-    // Initialize tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-    
-    // Initialize anime status modal
-    const animeStatusModal = new bootstrap.Modal(document.getElementById('animeStatusModal'));
-    
-    // Handle anime card click to show status modal
-    document.querySelectorAll('.anime-card').forEach(card => {
-        card.addEventListener('click', function(e) {
-            // Only open modal if not clicking on a link or button
-            if (!e.target.closest('a') && !e.target.closest('button')) {
-                const animeId = this.dataset.animeId;
-                const status = this.dataset.status;
-                
-                // Set anime ID in the form
-                document.getElementById('animeId').value = animeId;
-                
-                // Set current status if exists
-                if (status) {
-                    document.getElementById('statusSelect').value = status;
-                }
-                
-                // Show the modal
-                animeStatusModal.show();
-            }
-        });
-    });
-    
-    // Handle form submission
-    document.getElementById('animeStatusForm').addEventListener('submit', function(e) {
-        e.preventDefault();
+});
+
+// Handle favorite button clicks
+document.querySelectorAll('.favorite-btn').forEach(button => {
+    button.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const animeId = this.dataset.animeId;
+        const isFavorite = this.classList.contains('active');
+        const icon = this.querySelector('i');
         
-        const formData = new FormData(this);
-        const animeId = formData.get('anime_id');
-        const status = formData.get('status');
-        
-        // Send AJAX request to update status
-        fetch('{% url "anime:update_anime_status" %}', {
+        fetch(`/anime/${animeId}/toggle_favorite/`, {
             method: 'POST',
             headers: {
-                'X-CSRFTOKEN': '{{ csrf_token }}',
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',  
             },
-            body: new URLSearchParams(formData).toString()
+            body: JSON.stringify({ anime_id: parseInt(animeId) })  
         })
         .then(response => response.json())
         .then(data => {
-            if (data.status === 'success') {
-                // Close the modal
-                animeStatusModal.hide();
+            if (data.success) {
+                this.classList.toggle('active');
+                if (icon) {
+                    icon.classList.toggle('fas', data.is_favorite);
+                    icon.classList.toggle('far', !data.is_favorite);
+                }
+                
+                // Update favorite count if element exists
+                const favoriteCount = document.querySelector(`.favorite-count[data-anime-id="${animeId}"]`);
+                if (favoriteCount) {
+                    favoriteCount.textContent = data.favorite_count;
+                }
                 
                 // Show success message
                 const alert = document.createElement('div');
                 alert.className = 'alert alert-success alert-dismissible fade show mt-3';
                 alert.role = 'alert';
                 alert.innerHTML = `
-                    ${data.message}
+                    <strong>¡Éxito!</strong> ${data.message}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 `;
-                document.querySelector('.container.mt-4').prepend(alert);
-                
-                // Reload the page to reflect changes
-                setTimeout(() => window.location.reload(), 1000);
+                const container = document.querySelector('.container.mt-4');
+                if (container) {
+                    container.insertBefore(alert, container.firstChild);
+                    setTimeout(() => alert.remove(), 3000);
+                }
+            } else {
+                throw new Error(data.message || 'Error al actualizar favoritos');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            
-            // Show error message
-            const alert = document.createElement('div');
-            alert.className = 'alert alert-danger alert-dismissible fade show mt-3';
-            alert.role = 'alert';
-            alert.innerHTML = `
-                Error al actualizar el estado. Por favor, inténtalo de nuevo.
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            `;
-            document.querySelector('.container.mt-4').prepend(alert);
+            alert('Error al actualizar favoritos: ' + error.message);
         });
     });
-    
-    // Handle remove from list button
-    document.getElementById('removeFromList').addEventListener('click', function() {
-        if (confirm('¿Estás seguro de que deseas eliminar este anime de tu lista?')) {
-            const animeId = document.getElementById('animeId').value;
+});
+
+// Handle anime card clicks to show modal
+document.querySelectorAll('.anime-card').forEach(card => {
+    card.addEventListener('click', function(e) {
+        // Only open modal if not clicking on a link or button
+        if (!e.target.closest('a') && !e.target.closest('button')) {
+            const animeId = this.dataset.animeId;
+            const title = this.dataset.title;
+            const currentStatus = this.dataset.status || 'plan_to_watch';
             
-            // Send AJAX request to remove from list
-            fetch('{% url "anime:remove_from_list" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFTOKEN': '{{ csrf_token }}'
-                },
-                body: `anime_id=${animeId}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    // Close the modal
-                    animeStatusModal.hide();
-                    
-                    // Show success message
-                    const alert = document.createElement('div');
-                    alert.className = 'alert alert-success alert-dismissible fade show mt-3';
-                    alert.role = 'alert';
-                    alert.innerHTML = `
-                        ${data.message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    `;
-                    document.querySelector('.container.mt-4').prepend(alert);
-                    
-                    // Reload the page to reflect changes
-                    setTimeout(() => window.location.reload(), 1000);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                
-                // Show error message
-                const alert = document.createElement('div');
-                alert.className = 'alert alert-danger alert-dismissible fade show mt-3';
-                alert.role = 'alert';
-                alert.innerHTML = `
-                    Error al eliminar de la lista. Por favor, inténtalo de nuevo.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                `;
-                document.querySelector('.container.mt-4').prepend(alert);
-            });
+            // Update modal with anime info
+            document.getElementById('animeId').value = animeId;
+            document.getElementById('animeTitle').textContent = title;
+            document.querySelector(`#animeStatusForm input[name="status"][value="${currentStatus}"]`).checked = true;
+            
+            // Show the modal
+            animeStatusModal.show();
         }
     });
+});
+
+// Handle form submission
+document.getElementById('animeStatusForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const animeId = document.getElementById('animeId').value;
+    const status = document.querySelector('input[name="status"]:checked').value;
+    
+    // Send AJAX request to update status
+    fetch(`/anime/${animeId}/update_status/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json',  
+        },
+        body: JSON.stringify({
+            anime_id: parseInt(animeId),
+            status: status
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Close the modal
+            animeStatusModal.hide();
+            
+            // Show success message
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show mt-3';
+            alert.role = 'alert';
+            alert.innerHTML = `
+                <strong>¡Éxito!</strong> ${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            const container = document.querySelector('.container.mt-4');
+            if (container) {
+                container.insertBefore(alert, container.firstChild);
+                setTimeout(() => alert.remove(), 3000);
+            }
+            
+            // Reload the page to reflect changes
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+        } else {
+            throw new Error(data.message || 'Error al actualizar el estado');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar el estado: ' + error.message);
+    });
+});
+
+// Handle remove from list button
+document.getElementById('removeFromList').addEventListener('click', function() {
+    if (confirm('¿Estás seguro de que deseas eliminar este anime de tu lista?')) {
+        const animeId = document.getElementById('animeId').value;
+        
+        // Send AJAX request to remove from list
+        fetch(`/anime/${animeId}/remove_from_list/`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',  
+            },
+            body: JSON.stringify({ anime_id: parseInt(animeId) })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                animeStatusModal.hide();
+                // Reload to show changes
+                window.location.reload();
+            } else {
+                throw new Error(data.message || 'Error al eliminar de la lista');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar de la lista: ' + error.message);
+        });
+    }
 });
 </script>
 {% endblock %}

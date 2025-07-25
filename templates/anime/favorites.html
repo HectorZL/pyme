@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mis Favoritos - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .favorites-container {
+        padding: 2rem 0;
+    }
+    
+    .favorites-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #444;
+    }
+    
+    .favorites-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .favorite-card {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background: #1e1e1e;
+        border: 1px solid #333;
+    }
+    
+    .favorite-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .favorite-card img {
+        width: 100%;
+        height: 280px;
+        object-fit: cover;
+    }
+    
+    .favorite-info {
+        padding: 1rem;
+    }
+    
+    .favorite-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #fff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .favorite-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.75rem;
+    }
+    
+    .no-favorites {
+        text-align: center;
+        padding: 3rem 1rem;
+        background: #1e1e1e;
+        border-radius: 8px;
+        margin-top: 2rem;
+    }
+    
+    .no-favorites i {
+        font-size: 3rem;
+        color: #666;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    
+    .favorite-remove {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        border: none;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .favorite-remove:hover {
+        background: #dc3545;
+        transform: scale(1.1);
+    }
+    
+    @media (max-width: 768px) {
+        .favorites-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+        
+        .favorite-card img {
+            height: 220px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container favorites-container">
+    <div class="favorites-header">
+        <h1><i class="fas fa-heart text-danger me-2"></i> Mis Favoritos</h1>
+        <p class="text-muted">Tus animes favoritos guardados en un solo lugar</p>
+    </div>
+    
+    {% if favorites %}
+        <div class="favorites-grid">
+            {% for favorite in favorites %}
+                <div class="favorite-card">
+                    <a href="{% url 'anime:anime_detail' favorite.anime.slug %}">
+                        {% if favorite.anime.image %}
+                            <img src="{{ favorite.anime.image.url }}" alt="{{ favorite.anime.title }}" class="img-fluid">
+                        {% else %}
+                            <div class="no-image" style="height: 200px; background: #2d2d2d; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-image fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                    </a>
+                    <div class="favorite-actions">
+                        <div class="favorite-info">
+                            <h5 class="favorite-title">{{ favorite.anime.title }}</h5>
+                            <span class="badge bg-secondary">{{ favorite.get_status_display }}</span>
+                        </div>
+                        <button class="favorite-remove" data-anime-id="{{ favorite.anime.id }}" title="Quitar de favoritos">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-favorites">
+            <i class="far fa-heart"></i>
+            <h3>No tienes favoritos aún</h3>
+            <p class="text-muted">Añade animes a tus favoritos para verlos aquí</p>
+            <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-3">
+                <i class="fas fa-search me-2"></i>Explorar Catálogo
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle remove from favorites
+    document.querySelectorAll('.favorite-remove').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const animeId = this.getAttribute('data-anime-id');
+            const card = this.closest('.favorite-card');
+            
+            if (confirm('¿Estás seguro de que quieres quitar este anime de tus favoritos?')) {
+                fetch(`/anime/${animeId}/toggle_favorite/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFTOKEN': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove the card with animation
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.9)';
+                        setTimeout(() => {
+                            card.remove();
+                            
+                            // If no favorites left, show empty state
+                            if (document.querySelectorAll('.favorite-card').length === 0) {
+                                location.reload();
+                            }
+                        }, 300);
+                        
+                        // Show success message
+                        showToast('success', data.message);
+                    } else {
+                        showToast('error', data.message || 'Error al quitar de favoritos');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('error', 'Error de conexión');
+                });
+            }
+        });
+    });
+    
+    // Show toast notifications
+    function showToast(type, message) {
+        const toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            document.body.appendChild(toastContainer);
+        }
+        
+        const toastId = 'toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        // Auto-remove toast after 5 seconds
+        setTimeout(() => {
+            const toastElement = document.getElementById(toastId);
+            if (toastElement) {
+                toastElement.remove();
+            }
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}

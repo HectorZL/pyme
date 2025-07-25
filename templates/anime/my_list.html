@@ -286,5 +286,15 @@ function updateTabBadges(counts) {
         }
     });
 }
+
+// Send AJAX request to update favorite status
+fetch(`/anime/${animeId}/toggle_favorite/`, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFTOKEN': '{{ csrf_token }}'
+    },
+    body: JSON.stringify({})
+})
 </script>
 {% endblock %}
