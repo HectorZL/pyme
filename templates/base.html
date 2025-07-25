@@ -81,11 +81,6 @@
                         </div>
                     </form>
 
-                    <!-- Theme Toggle -->
-                    <button id="theme-toggle" class="btn me-2" style="background-color: #FF8C00; color: white; border: none;" title="Cambiar tema">
-                        <i class="fas fa-moon"></i>
-                    </button>
-
                     <!-- User Menu -->
                     {% if user.is_authenticated %}
                     <div class="dropdown">
@@ -138,9 +133,49 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer mt-auto py-3" style="background-color: #000000; color: #ffffff; border-top: 1px solid #FF8C00;">
-        <div class="container text-center">
-            <span class="text-muted">2025 PYCTEM.ANIME - Todos los derechos reservados</span>
+    <footer class="footer mt-auto py-4" style="background-color: #000000; color: #ffffff; border-top: 1px solid #FF8C00;">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5 class="mb-3" style="color: #FF8C00;">PYCTEM.ANIME</h5>
+                    <p>Tu plataforma favorita para ver y descubrir anime. Disfruta de los mejores títulos en un solo lugar.</p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5 class="mb-3" style="color: #FF8C00;">Enlaces Rápidos</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{% url 'anime:home' %}" class="text-white text-decoration-none">Inicio</a></li>
+                        <li class="mb-2"><a href="{% url 'anime:catalog' %}" class="text-white text-decoration-none">Catálogo</a></li>
+                        {% if user.is_authenticated %}
+                            <li class="mb-2"><a href="{% url 'anime:user_anime_list' %}" class="text-white text-decoration-none">Mi Lista</a></li>
+                            <li class="mb-2"><a href="#" class="text-white text-decoration-none">Favoritos</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="mb-3" style="color: #FF8C00;">Síguenos</h5>
+                    <div class="d-flex justify-content-start">
+                        <a href="https://facebook.com" class="me-3 text-white" target="_blank" rel="noopener noreferrer" style="font-size: 1.5rem;">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="https://twitter.com" class="me-3 text-white" target="_blank" rel="noopener noreferrer" style="font-size: 1.5rem;">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="https://instagram.com" class="me-3 text-white" target="_blank" rel="noopener noreferrer" style="font-size: 1.5rem;">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://discord.gg" class="me-3 text-white" target="_blank" rel="noopener noreferrer" style="font-size: 1.5rem;">
+                            <i class="fab fa-discord"></i>
+                        </a>
+                        <a href="https://youtube.com" class="text-white" target="_blank" rel="noopener noreferrer" style="font-size: 1.5rem;">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <hr style="border-color: #333;">
+            <div class="text-center">
+                <p class="mb-0">&copy; 2025 PYCTEM.ANIME - Todos los derechos reservados</p>
+            </div>
         </div>
     </footer>
 
@@ -179,43 +214,6 @@
             }
         }
     });
-    </script>
-    <script>
-        // Theme Toggle Functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const themeToggle = document.getElementById('theme-toggle');
-            const htmlElement = document.documentElement;
-            const icon = themeToggle.querySelector('i');
-            
-            // Check for saved theme preference or use preferred color scheme
-            const currentTheme = localStorage.getItem('theme') || 'light';
-            
-            // Apply the current theme
-            if (currentTheme === 'dark') {
-                htmlElement.setAttribute('data-bs-theme', 'dark');
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
-            } else {
-                htmlElement.setAttribute('data-bs-theme', 'light');
-                icon.classList.remove('fa-sun');
-                icon.classList.add('fa-moon');
-            }
-            
-            // Toggle theme on button click
-            themeToggle.addEventListener('click', function() {
-                if (htmlElement.getAttribute('data-bs-theme') === 'dark') {
-                    htmlElement.setAttribute('data-bs-theme', 'light');
-                    localStorage.setItem('theme', 'light');
-                    icon.classList.remove('fa-sun');
-                    icon.classList.add('fa-moon');
-                } else {
-                    htmlElement.setAttribute('data-bs-theme', 'dark');
-                    localStorage.setItem('theme', 'dark');
-                    icon.classList.remove('fa-moon');
-                    icon.classList.add('fa-sun');
-                }
-            });
-        });
     </script>
 </body>
 </html>
