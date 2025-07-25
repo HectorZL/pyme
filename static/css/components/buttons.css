@@ -28,23 +28,23 @@
  * Button variants
  */
 .btn-primary {
-  background-color: var(--primary);
+  background-color: #FF8C00;  /* Orange color */
   color: var(--white);
 }
 
 .btn-primary:hover {
-  background-color: var(--primary-dark);
+  background-color: #E67E00;  /* Darker orange on hover */
   color: var(--white);
 }
 
 .btn-outline {
   background-color: transparent;
-  border: 1px solid var(--primary);
-  color: var(--primary);
+  border: 1px solid #FF8C00 !important;
+  color: #FF8C00 !important;
 }
 
 .btn-outline:hover {
-  background-color: var(--primary);
+  background-color: #FF8C00 !important;
   color: var(--white);
 }
 

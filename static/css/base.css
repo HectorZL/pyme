@@ -7,12 +7,12 @@
  */
 :root {
   /* Material 3 Color Palette */
-  --primary: #D32F2F;        /* Material Red 700 */
-  --primary-dark: #B71C1C;   /* Material Red 900 */
-  --primary-light: #EF5350;  /* Material Red 400 */
-  --primary-container: #FFDAD6; /* Material Red 50 */
+  --primary: #FF8C00;        /* Orange */
+  --primary-dark: #E67E00;   /* Darker Orange */
+  --primary-light: #FFA726;  /* Lighter Orange */
+  --primary-container: #FFE0B2; /* Light Orange background */
   --on-primary: #FFFFFF;     /* White text on primary */
-  --primary-transparent: rgba(211, 47, 47, 0.08); /* Primary with transparency */
+  --primary-transparent: rgba(255, 140, 0, 0.08); /* Orange with transparency */
   
   /* Modern gray palette */
   --black: #2d2d2d;         /* Soft dark gray */
@@ -260,14 +260,15 @@ p {
 }
 
 .btn-primary {
-    background-color: var(--primary);
-    color: white;
+    background-color: #FF8C00 !important;  /* Orange color */
+    color: white !important;
+    border: none;
 }
 
 .btn-primary:hover {
-    background-color: var(--primary-dark);
+    background-color: #E67E00 !important;  /* Darker orange on hover */
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(255, 140, 0, 0.2);
 }
 
 .btn-outline {

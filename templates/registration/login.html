@@ -1,5 +1,10 @@
 {% extends 'base.html' %}
-
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/catalog.css' %}?v=1.0.1">
+<link rel="stylesheet" href="{% static 'css/components/buttons.css' %}?v=1.0.1">
+<link rel="stylesheet" href="{% static 'css/components/global.css' %}?v=1.0.1">
+{% endblock %}
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
@@ -9,7 +14,7 @@
                     <h2 class="text-center mb-4">Iniciar sesión</h2>
                     
                     {% if form.errors %}
-                    <div class="alert alert-danger" role="alert">
+                    <div class="alert alert-warning" role="alert">
                         Tu nombre de usuario y contraseña no coinciden. Inténtalo de nuevo.
                     </div>
                     {% endif %}
@@ -38,7 +43,7 @@
                             <label for="id_password" class="form-label">Contraseña</label>
                             <input type="password" name="password" class="form-control form-control-lg" id="id_password" required>
                             <div class="form-text">
-                                <a href="{% url 'anime:password_reset' %}">¿Olvidaste tu contraseña?</a>
+                                <a href="{% url 'anime:password_reset' %}" class="text-orange">¿Olvidaste tu contraseña?</a>
                             </div>
                         </div>
                         
@@ -49,7 +54,7 @@
                     </form>
                     
                     <div class="text-center">
-                        <p class="mb-0">¿No tienes una cuenta? <a href="{% url 'anime:register' %}">Regístrate</a></p>
+                        <p class="mb-0">¿No tienes una cuenta? <a href="{% url 'anime:register' %}" class="text-orange">Regístrate</a></p>
                     </div>
                 </div>
             </div>

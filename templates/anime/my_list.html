@@ -4,6 +4,12 @@
 
 {% block title %}Mi Lista de Anime{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/components/catalog.css' %}?v=1.0.1">
+<link rel="stylesheet" href="{% static 'css/components/buttons.css' %}?v=1.0.1">
+<link rel="stylesheet" href="{% static 'css/components/global.css' %}?v=1.0.1">
+{% endblock %}
+
 {% block content %}
 <div class="container py-4">
     <div class="row mb-4">
@@ -15,27 +21,35 @@
 
     <!-- Stats Cards -->
     <div class="row mb-4">
-        <div class="col-md-4 mb-3">
-            <div class="card bg-primary text-white h-100">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-secondary text-white h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Total</h5>
-                    <h2 class="display-6 stat-total">{{ anime_list|length }}</h2>
+                    <h5 class="card-title">Por ver</h5>
+                    <h2 class="display-6 stat-plan-to-watch">{{ plan_to_watch_count }}</h2>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card bg-success text-white h-100">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white h-100">
                 <div class="card-body">
                     <h5 class="card-title">Viendo</h5>
                     <h2 class="display-6 stat-watching">{{ watching_count }}</h2>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card bg-info text-white h-100">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Completados</h5>
+                    <h5 class="card-title">Finalizado</h5>
                     <h2 class="display-6 stat-completed">{{ completed_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-dark text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Total</h5>
+                    <h2 class="display-6 stat-total">{{ anime_list|length }}</h2>
                 </div>
             </div>
         </div>
@@ -44,8 +58,8 @@
     <!-- Tabs Navigation -->
     <ul class="nav nav-tabs mb-4" id="animeTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="true">
-                Todos <span class="badge bg-secondary">{{ anime_list|length }}</span>
+            <button class="nav-link active" id="plan-to-watch-tab" data-bs-toggle="tab" data-bs-target="#plan-to-watch" type="button" role="tab" aria-controls="plan-to-watch" aria-selected="true">
+                <i class="fas fa-bookmark me-1"></i> Por ver <span class="badge bg-secondary">{{ plan_to_watch_count }}</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -55,55 +69,68 @@
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab" aria-controls="completed" aria-selected="false">
-                <i class="fas fa-check-circle me-1"></i> Completados <span class="badge bg-success">{{ completed_count }}</span>
+                <i class="fas fa-check-circle me-1"></i> Finalizado <span class="badge bg-success">{{ completed_count }}</span>
             </button>
         </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="on-hold-tab" data-bs-toggle="tab" data-bs-target="#on-hold" type="button" role="tab" aria-controls="on-hold" aria-selected="false">
-                <i class="fas fa-pause-circle me-1"></i> En pausa <span class="badge bg-warning">{{ on_hold_count }}</span>
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="dropped-tab" data-bs-toggle="tab" data-bs-target="#dropped" type="button" role="tab" aria-controls="dropped" aria-selected="false">
-                <i class="fas fa-times-circle me-1"></i> Abandonados <span class="badge bg-danger">{{ dropped_count }}</span>
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="plan-to-watch-tab" data-bs-toggle="tab" data-bs-target="#plan-to-watch" type="button" role="tab" aria-controls="plan-to-watch" aria-selected="false">
-                <i class="fas fa-bookmark me-1"></i> Por ver <span class="badge bg-secondary">{{ plan_to_watch_count }}</span>
-            </button>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                Más
+            </a>
+            <ul class="dropdown-menu">
+                <li>
+                    <button class="dropdown-item" id="on-hold-tab" data-bs-toggle="tab" data-bs-target="#on-hold" type="button" role="tab" aria-controls="on-hold" aria-selected="false">
+                        <i class="fas fa-pause-circle me-1"></i> En pausa <span class="badge bg-warning">{{ on_hold_count }}</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="dropdown-item" id="dropped-tab" data-bs-toggle="tab" data-bs-target="#dropped" type="button" role="tab" aria-controls="dropped" aria-selected="false">
+                        <i class="fas fa-times-circle me-1"></i> Abandonados <span class="badge bg-danger">{{ dropped_count }}</span>
+                    </button>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <button class="dropdown-item" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="false">
+                        <i class="fas fa-list me-1"></i> Todos <span class="badge bg-secondary">{{ anime_list|length }}</span>
+                    </button>
+                </li>
+            </ul>
         </li>
     </ul>
 
     <!-- Tab Content -->
     <div class="tab-content" id="animeTabsContent">
-        <!-- All Anime Tab -->
-        <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
-            {% if anime_list %}
-                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-                    {% for user_anime in anime_list %}
+        <!-- Plan to Watch Tab (Now first) -->
+        <div class="tab-pane fade show active" id="plan-to-watch" role="tabpanel" aria-labelledby="plan-to-watch-tab">
+            <div id="plan-to-watch-loading" class="text-center py-5" style="display: none;">
+                <div class="spinner-border text-secondary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+            <div id="plan-to-watch-content" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+                {% for user_anime in anime_list %}
+                    {% if user_anime.status == 'plan_to_watch' %}
                         <div class="col">
                             {% include 'anime/partials/anime_card.html' with anime=user_anime.anime user_anime=user_anime %}
                         </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center py-5">
-                    <div class="mb-4">
-                        <i class="fas fa-tv fa-4x text-muted mb-3"></i>
-                        <h3>Tu lista está vacía</h3>
-                        <p class="text-muted">Añade animes a tu lista para verlos aquí</p>
-                        <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-3">
-                            <i class="fas fa-search me-2"></i>Explorar catálogo
-                        </a>
+                    {% endif %}
+                {% empty %}
+                    <div class="col-12">
+                        <div class="text-center py-5">
+                            <i class="fas fa-bookmark fa-4x text-muted mb-3"></i>
+                            <h3>No tienes animes en tu lista de "Por ver"</h3>
+                            <p class="text-muted">Añade animes a tu lista para verlos aquí</p>
+                            <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-3">
+                                <i class="fas fa-search me-2"></i>Explorar catálogo
+                            </a>
+                        </div>
                     </div>
-                </div>
-            {% endif %}
+                {% endfor %}
+            </div>
         </div>
 
         <!-- Other Tabs (Loaded via AJAX) -->
         <div class="tab-pane fade" id="watching" role="tabpanel" aria-labelledby="watching-tab">
-            <div id="watching-loading" class="text-center py-5" style="display: none;">
+            <div id="watching-loading" class="text-center py-5">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Cargando...</span>
                 </div>
@@ -114,7 +141,7 @@
         </div>
 
         <div class="tab-pane fade" id="completed" role="tabpanel" aria-labelledby="completed-tab">
-            <div id="completed-loading" class="text-center py-5" style="display: none;">
+            <div id="completed-loading" class="text-center py-5">
                 <div class="spinner-border text-success" role="status">
                     <span class="visually-hidden">Cargando...</span>
                 </div>
@@ -124,8 +151,9 @@
             </div>
         </div>
 
+        <!-- Other Tabs (Moved to dropdown) -->
         <div class="tab-pane fade" id="on-hold" role="tabpanel" aria-labelledby="on-hold-tab">
-            <div id="on-hold-loading" class="text-center py-5" style="display: none;">
+            <div id="on-hold-loading" class="text-center py-5">
                 <div class="spinner-border text-warning" role="status">
                     <span class="visually-hidden">Cargando...</span>
                 </div>
@@ -136,7 +164,7 @@
         </div>
 
         <div class="tab-pane fade" id="dropped" role="tabpanel" aria-labelledby="dropped-tab">
-            <div id="dropped-loading" class="text-center py-5" style="display: none;">
+            <div id="dropped-loading" class="text-center py-5">
                 <div class="spinner-border text-danger" role="status">
                     <span class="visually-hidden">Cargando...</span>
                 </div>
@@ -146,15 +174,25 @@
             </div>
         </div>
 
-        <div class="tab-pane fade" id="plan-to-watch" role="tabpanel" aria-labelledby="plan-to-watch-tab">
-            <div id="plan-to-watch-loading" class="text-center py-5" style="display: none;">
-                <div class="spinner-border text-secondary" role="status">
-                    <span class="visually-hidden">Cargando...</span>
+        <div class="tab-pane fade" id="all" role="tabpanel" aria-labelledby="all-tab">
+            {% if anime_list %}
+                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+                    {% for user_anime in anime_list %}
+                        <div class="col">
+                            {% include 'anime/partials/anime_card.html' with anime=user_anime.anime user_anime=user_anime %}
+                        </div>
+                    {% endfor %}
                 </div>
-            </div>
-            <div id="plan-to-watch-content" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-                <!-- Content loaded via AJAX -->
-            </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-tv fa-4x text-muted mb-3"></i>
+                    <h3>Tu lista está vacía</h3>
+                    <p class="text-muted">Añade animes a tu lista para verlos aquí</p>
+                    <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-3">
+                        <i class="fas fa-search me-2"></i>Explorar catálogo
+                    </a>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -175,12 +213,17 @@ document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
         const target = event.target.getAttribute('data-bs-target');
         const tabId = target.substring(1); // Remove the # from the target
         
-        // Only load content for tabs other than 'all'
-        if (tabId !== 'all') {
+        // Only load content for tabs that use AJAX
+        if (tabId !== 'all' && tabId !== 'plan-to-watch') {
             loadTabContent(tabId);
         }
     });
 });
+
+// Load initial tab content if needed
+if (document.querySelector('#watching-content:empty')) {
+    loadTabContent('watching');
+}
 
 // Function to load tab content via AJAX
 function loadTabContent(status) {
@@ -198,15 +241,20 @@ function loadTabContent(status) {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                // Update content
                 contentEl.innerHTML = data.html;
-                
-                // Update tab badges
-                if (data.status_counts) {
-                    updateTabBadges(data.status_counts);
-                }
+                // Re-initialize tooltips for the new content
+                var newTooltipTriggerList = [].slice.call(contentEl.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                newTooltipTriggerList.forEach(function (tooltipTriggerEl) {
+                    new bootstrap.Tooltip(tooltipTriggerEl);
+                });
             } else {
-                throw new Error(data.message || 'Error al cargar la lista');
+                contentEl.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Error al cargar el contenido. Por favor, intenta de nuevo.
+                        </div>
+                    </div>`;
             }
         })
         .catch(error => {
@@ -214,8 +262,8 @@ function loadTabContent(status) {
             contentEl.innerHTML = `
                 <div class="col-12">
                     <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Error al cargar la lista. Por favor, intenta de nuevo.
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Error de conexión. Por favor, verifica tu conexión a internet.
                     </div>
                 </div>`;
         })
@@ -224,24 +272,17 @@ function loadTabContent(status) {
         });
 }
 
-// Function to update tab badges
+// Function to update tab badges (if needed)
 function updateTabBadges(counts) {
-    const statusMap = {
-        'watching': 'Viendo',
-        'completed': 'Completados',
-        'on_hold': 'En pausa',
-        'dropped': 'Abandonados',
-        'plan_to_watch': 'Por ver'
-    };
-    
-    // Update each tab's badge
-    Object.entries(statusMap).forEach(([status, label]) => {
-        const tabElement = document.querySelector(`[aria-controls="${status.replace('_', '-')}"]`);
-        if (tabElement) {
-            const badge = tabElement.querySelector('.badge');
-            if (badge) {
-                badge.textContent = counts[status] || 0;
-            }
+    Object.entries(counts).forEach(([status, count]) => {
+        const badge = document.querySelector(`#${status}-tab .badge`);
+        if (badge) {
+            badge.textContent = count;
+        }
+        // Update stats cards
+        const statEl = document.querySelector(`.stat-${status}`);
+        if (statEl) {
+            statEl.textContent = count;
         }
     });
 }
