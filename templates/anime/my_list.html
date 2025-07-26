@@ -138,7 +138,6 @@
                                 <th>Estado</th>
                                 <th>Progreso</th>
                                 <th>Puntuación</th>
-                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -187,30 +186,6 @@
                                     {% else %}
                                         <span class="text-muted">Sin calificar</span>
                                     {% endif %}
-                                </td>
-                                <td>
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton{{ forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="fas fa-ellipsis-v"></i>
-                                        </button>
-                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ forloop.counter }}">
-                                            {% for status_choice in list_choices %}
-                                                {% if status_choice.0 != user_anime.status %}
-                                                    <li>
-                                                        <a class="dropdown-item" href="#" onclick="updateAnimeStatus({{ user_anime.anime.id }}, '{{ status_choice.0 }}')">
-                                                            {{ status_choice.1 }}
-                                                        </a>
-                                                    </li>
-                                                {% endif %}
-                                            {% endfor %}
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <a class="dropdown-item text-danger" href="#" onclick="removeFromList({{ user_anime.anime.id }})">
-                                                    <i class="fas fa-trash-alt me-1"></i> Eliminar de mi lista
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
