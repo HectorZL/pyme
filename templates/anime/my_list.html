@@ -37,94 +37,205 @@
         margin: 0.5rem 0;
         color: #FF8C00;
     }
-    .anime-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 2rem;
-        margin-top: 2rem;
+    .anime-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1.5rem;
+        color: #000000;
+        border: 1px solid #000000;
     }
-    .empty-state {
-        grid-column: 1 / -1;
-        text-align: center;
-        padding: 4rem 2rem;
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 1rem;
-        margin: 2rem 0;
+    .anime-table th {
+        background-color: #000000;
+        color: #ffffff;
+        padding: 1rem;
+        text-align: left;
+        border: 1px solid #000000;
     }
-    .status-tab .card-body {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
+    .anime-table td {
+        padding: 1rem;
+        border: 1px solid #000000;
+        vertical-align: middle;
     }
-    .status-tab i {
-        font-size: 1.8rem;
-        margin-bottom: 0.8rem;
+    .anime-table tr:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    .anime-cover {
+        width: 60px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+    .anime-title {
+        font-weight: 500;
+        color: #333;
+        text-decoration: none;
+    }
+    .anime-title:hover {
         color: #FF8C00;
+        text-decoration: none;
+    }
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .status-watching { background-color: #e3f2fd; color: #1976d2; }
+    .status-completed { background-color: #e8f5e9; color: #388e3c; }
+    .status-plantowatch { background-color: #fff3e0; color: #f57c00; }
+    .progress-bar {
+        height: 6px;
+        background-color: #e9ecef;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    .progress-value {
+        height: 100%;
+        background-color: #FF8C00;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row mb-4">
-        <div class="col">
-            <h1 class="display-5 fw-bold">Mi Lista de Anime</h1>
-            <p class="lead">Gestiona tu lista personal de anime</p>
-        </div>
-    </div>
-
-    <!-- Status Tabs -->
-    <div class="row mb-4">
+<div class="container py-5">
+    <h1 class="mb-4">Mi Lista de Anime</h1>
+    
+    <!-- Filtros por estado -->
+    <div class="row g-4 mb-5">
         {% for status_choice in list_choices %}
-        {% with status=status_choice.0 count=status_counts|get_item:status_choice.0|default:0 %}
-        <div class="col-md-4 col-6 mb-3">
-            <div class="card status-tab {% if status == current_status %}active{% endif %}" 
-                 onclick="filterByStatus('{{ status }}')"
-                 style="cursor: pointer;">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        {% if status == 'por_ver' %}
-                            <i class="fas fa-bookmark me-2"></i>Por ver
-                        {% elif status == 'viendo' %}
-                            <i class="fas fa-tv me-2"></i>Viendo
-                        {% elif status == 'finalizado' %}
-                            <i class="fas fa-check-circle me-2"></i>Finalizado
+        <div class="col-md-4">
+            <div class="status-tab card h-100 {% if status_choice.0 == current_status %}active{% endif %}" 
+                 onclick="filterByStatus('{{ status_choice.0 }}')">
+                <div class="card-body text-center">
+                    <h5 class="card-title mb-0">
+                        {% if status_choice.0 == 'por_ver' %}
+                            <i class="fas fa-bookmark me-2"></i>
+                        {% elif status_choice.0 == 'viendo' %}
+                            <i class="fas fa-tv me-2"></i>
+                        {% elif status_choice.0 == 'finalizado' %}
+                            <i class="fas fa-check-circle me-2"></i>
                         {% endif %}
+                        {{ status_choice.1 }}
                     </h5>
-                    <h2 class="display-6">{{ count }}</h2>
+                    <div class="display-6">{{ status_counts|get_item:status_choice.0|default:0 }}</div>
                 </div>
             </div>
         </div>
-        {% endwith %}
         {% endfor %}
     </div>
 
-    <!-- Anime Grid -->
-    <div class="anime-grid" id="animeGrid">
-        {% for user_anime in user_anime_list %}
-            {% with anime=user_anime.anime %}
-                {% include 'anime/partials/anime_card.html' with anime=anime user_anime=user_anime favorites=favorites %}
-            {% endwith %}
-        {% empty %}
-            <div class="empty-state">
-                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
-                <h3>No hay animes en esta sección</h3>
-                <p class="text-muted">
-                    {% if current_status == 'por_ver' %} 
-                        Añade animes a tu lista de "Por ver" para verlos aquí
-                    {% elif current_status == 'viendo' %}
-                        Añade animes a tu lista de "Viendo" para verlos aquí
-                    {% elif current_status == 'finalizado' %}
-                        Marca animes como completados para verlos aquí
-                    {% endif %}
-                </p>
-                <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-3">
-                    <i class="fas fa-search me-2"></i>Explorar catálogo
-                </a>
-            </div>
-        {% endfor %}
+    <!-- Tabla de animes -->
+    <div class="row">
+        <div class="col-12">
+            {% if user_anime_list %}
+                <div class="table-responsive">
+                    <table class="anime-table">
+                        <thead>
+                            <tr>
+                                <th>Anime</th>
+                                <th>Estado</th>
+                                <th>Progreso</th>
+                                <th>Puntuación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user_anime in user_anime_list %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if user_anime.anime.image %}
+                                            <img src="{{ user_anime.anime.image.url }}" class="anime-cover me-3" alt="{{ user_anime.anime.title }}">
+                                        {% else %}
+                                            <div class="anime-cover bg-light d-flex align-items-center justify-content-center me-3">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <a href="{{ user_anime.anime.get_absolute_url }}" class="anime-title">
+                                                {{ user_anime.anime.title }}
+                                            </a>
+                                            <div class="text-muted small">
+                                                {{ user_anime.anime.get_anime_type_display }} • {{ user_anime.anime.year|default:"N/A" }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-{{ user_anime.status }}">
+                                        {{ user_anime.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress-bar me-2" style="width: 100px;">
+                                            <div class="progress-value" style="width: {% widthratio user_anime.progress user_anime.anime.episodes|default:1 100 %}%"></div>
+                                        </div>
+                                        <span class="small">
+                                            {{ user_anime.progress|default:0 }}/{{ user_anime.anime.episodes|default:"??" }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if user_anime.score %}
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-star text-warning me-1"></i>
+                                            <span>{{ user_anime.score }}/10</span>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">Sin calificar</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton{{ forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ forloop.counter }}">
+                                            {% for status_choice in list_choices %}
+                                                {% if status_choice.0 != user_anime.status %}
+                                                    <li>
+                                                        <a class="dropdown-item" href="#" onclick="updateAnimeStatus({{ user_anime.anime.id }}, '{{ status_choice.0 }}')">
+                                                            {{ status_choice.1 }}
+                                                        </a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="#" onclick="removeFromList({{ user_anime.anime.id }})">
+                                                    <i class="fas fa-trash-alt me-1"></i> Eliminar de mi lista
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-4x mb-3 text-muted"></i>
+                    <h3>No hay animes en esta lista</h3>
+                    <p class="text-muted">
+                        {% if current_status == 'por_ver' %}
+                            Añade animes a tu lista de "Por ver" para verlos aquí
+                        {% elif current_status == 'viendo' %}
+                            Añade animes a tu lista de "Viendo" para verlos aquí
+                        {% elif current_status == 'finalizado' %}
+                            Marca animes como completados para verlos aquí
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-3">
+                        <i class="fas fa-search me-2"></i>Explorar animes
+                    </a>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -132,27 +243,76 @@
 {% block extra_js %}
 <script>
 function filterByStatus(status) {
-    // Update URL with the selected status
     const url = new URL(window.location.href);
     url.searchParams.set('status', status);
     window.location.href = url.toString();
+}
+
+function updateAnimeStatus(animeId, status) {
+    fetch(`/anime/${animeId}/update_status/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFTOKEN': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            status: status,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            window.location.reload();
+        } else {
+            alert('Error al actualizar el estado: ' + (data.message || 'Error desconocido'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar el estado del anime');
+    });
+}
+
+function removeFromList(animeId) {
+    if (confirm('¿Estás seguro de que quieres eliminar este anime de tu lista?')) {
+        fetch('/anime/remove-from-list/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFTOKEN': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                anime_id: animeId,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.reload();
+            } else {
+                alert('Error al eliminar: ' + (data.message || 'Error desconocido'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar el anime de la lista');
+        });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
     // Highlight current status tab
     const currentStatus = '{{ current_status }}';
     if (currentStatus) {
-        const activeTab = document.querySelector(`[data-status="${currentStatus}"]`);
-        if (activeTab) {
-            activeTab.classList.add('active');
-        }
+        document.querySelectorAll('.status-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`.status-tab[onclick*="'${currentStatus}'"]`).classList.add('active');
     }
-    
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
 });
 </script>
 {% endblock %}
