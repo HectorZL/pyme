@@ -186,38 +186,62 @@ document.addEventListener('DOMContentLoaded', function() {
             const card = this.closest('.favorite-card');
             
             if (confirm('¿Estás seguro de que quieres quitar este anime de tus favoritos?')) {
+                // Get CSRF token from cookies
+                const csrftoken = document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+                
+                if (!csrftoken) {
+                    console.error('No se pudo encontrar el token CSRF');
+                    showToast('error', 'Error de seguridad. Por favor, recarga la página.');
+                    return;
+                }
+                
                 fetch(`/anime/${animeId}/toggle_favorite/`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFTOKEN': '{{ csrf_token }}'
+                        'X-CSRFToken': csrftoken,
+                        'X-Requested-With': 'XMLHttpRequest'  // Required for @require_ajax
                     },
-                    body: JSON.stringify({})
+                    credentials: 'same-origin'
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
+                .then(async response => {
+                    const data = await response.json().catch(() => ({}));
+                    
+                    if (!response.ok) {
+                        console.error('Error en la respuesta:', {
+                            status: response.status,
+                            statusText: response.statusText,
+                            data: data
+                        });
+                        throw new Error(data.message || `Error del servidor: ${response.status} ${response.statusText}`);
+                    }
+                    
+                    if (data.status === 'success') {
+                        // Get the anime title before removing the card
+                        const animeTitle = card.querySelector('.favorite-info h5').textContent.trim();
+                        
                         // Remove the card with animation
                         card.style.opacity = '0';
-                        card.style.transform = 'scale(0.9)';
+                        card.style.transition = 'opacity 0.3s ease';
+                        
+                        // Show success message with anime title
+                        showToast('success', `"${animeTitle}" ya no es parte de tus animes favoritos`);
+                        
+                        // Remove the card from DOM after animation
                         setTimeout(() => {
                             card.remove();
                             
-                            // If no favorites left, show empty state
-                            if (document.querySelectorAll('.favorite-card').length === 0) {
+                            // If no more favorites, reload the page to show empty state
+                            if (!document.querySelector('.favorite-card')) {
                                 location.reload();
                             }
                         }, 300);
-                        
-                        // Show success message
-                        showToast('success', data.message);
                     } else {
-                        showToast('error', data.message || 'Error al quitar de favoritos');
+                        throw new Error(data.message || 'Error al quitar de favoritos');
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
-                    showToast('error', 'Error de conexión');
+                    console.error('Error en la solicitud:', error);
+                    showToast('error', error.message || 'Error al procesar la solicitud');
                 });
             }
         });
