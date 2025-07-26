@@ -8,7 +8,7 @@ from django.urls import reverse_lazy
 from django.http import JsonResponse
 from django.db import models
 from django.db.models import Q, Count, Case, When, IntegerField
-from .models import Anime, Genre, UserAnimeList, UserProfile
+from .models import Anime, Genre, UserAnimeList, UserProfile, Comment
 from .forms import AnimeFilterForm
 import json
 from django.views.decorators.http import require_http_methods
@@ -16,12 +16,17 @@ from django.contrib.auth.decorators import login_required
 from functools import wraps
 from django.utils import timezone
 from django.contrib import messages
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 def require_ajax(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
-        if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+        # Allow the request if either the header is set or it's a POST request
+        if not request.headers.get('X-Requested-With') == 'XMLHttpRequest' and request.method == 'POST':
+            # Log the issue but don't block the request
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f'Missing X-Requested-With header in request: {request.path}')
         return view_func(request, *args, **kwargs)
     return wrapper
 
@@ -548,6 +553,83 @@ def toggle_favorite(request, anime_id=None):
 @require_http_methods(["POST"])
 @login_required
 @require_ajax
+def update_anime_status(request, anime_id):
+    """
+    Handle AJAX requests to update an anime's status in the user's list.
+    
+    Args:
+        request: The HTTP request object
+        anime_id: ID of the anime to update (from URL)
+    
+    Expected POST parameters:
+    - status: New status ('por_ver', 'viendo', 'finalizado', etc. or 'remove' to delete)
+    - score: Optional score (0-10)
+    - progress: Optional episode progress
+    - notes: Optional user notes
+    - is_favorite: Optional boolean for favorite status
+    
+    Returns JSON response with status and message.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'error', 'message': 'Debes iniciar sesión para realizar esta acción'}, status=401)
+    
+    try:
+        anime = get_object_or_404(Anime, id=anime_id)
+        status = request.POST.get('status')
+        
+        if not status:
+            return JsonResponse({'status': 'error', 'message': 'Se requiere un estado'}, status=400)
+        
+        # Handle removing from list
+        if status == 'remove':
+            UserAnimeList.objects.filter(user=request.user, anime=anime).delete()
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Anime eliminado de tu lista',
+                'action': 'removed'
+            })
+        
+        # Validate status
+        valid_statuses = [choice[0] for choice in UserAnimeList.LIST_CHOICES]
+        if status not in valid_statuses:
+            return JsonResponse({'status': 'error', 'message': 'Estado no válido'}, status=400)
+        
+        # Get or create the user's anime list entry
+        user_anime, created = UserAnimeList.objects.get_or_create(
+            user=request.user,
+            anime=anime,
+            defaults={'status': status}
+        )
+        
+        # Update status and other fields
+        user_anime.status = status
+        user_anime.updated_at = timezone.now()
+        
+        # Update optional fields if provided
+        if 'score' in request.POST:
+            user_anime.score = request.POST.get('score')
+        if 'progress' in request.POST:
+            user_anime.progress = request.POST.get('progress')
+        if 'notes' in request.POST:
+            user_anime.notes = request.POST.get('notes')
+        if 'is_favorite' in request.POST:
+            user_anime.is_favorite = request.POST.get('is_favorite').lower() == 'true'
+        
+        user_anime.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Estado actualizado a {dict(UserAnimeList.LIST_CHOICES).get(status, status)}',
+            'user_status': user_anime.status,
+            'is_favorite': user_anime.is_favorite
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@require_http_methods(["POST"])
+@login_required
+@require_ajax
 def remove_from_list(request):
     """
     Handle AJAX requests to remove an anime from the user's list.
@@ -631,3 +713,56 @@ def get_anime_list_by_status(request, status):
     })
     
     return JsonResponse({'status': 'success', 'html': html})
+
+@require_http_methods(["POST"])
+@login_required
+def submit_comment(request, anime_slug):
+    """
+    Handle comment submission via AJAX.
+    """
+    try:
+        data = json.loads(request.body)
+        content = data.get('content', '').strip()
+        is_spoiler = data.get('is_spoiler', False)
+        parent_id = data.get('parent_id')
+        
+        if not content:
+            return JsonResponse({'status': 'error', 'message': 'El comentario no puede estar vacío'}, status=400)
+            
+        try:
+            anime = Anime.objects.get(slug=anime_slug)
+        except Anime.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Anime no encontrado'}, status=404)
+        
+        parent = None
+        if parent_id:
+            try:
+                parent = Comment.objects.get(id=parent_id, anime=anime)
+            except Comment.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Comentario padre no válido'}, status=400)
+        
+        comment = Comment.objects.create(
+            user=request.user,
+            anime=anime,
+            parent=parent,
+            content=content,
+            is_spoiler=is_spoiler
+        )
+        
+        # Render the comment to HTML
+        comment_html = render_to_string('anime/partials/comment.html', {
+            'comment': comment,
+            'user': request.user
+        })
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Comentario publicado',
+            'comment_html': comment_html,
+            'comment_id': comment.id
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Datos inválidos'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

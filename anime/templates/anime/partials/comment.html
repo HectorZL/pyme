@@ -1,0 +1,140 @@
+<div class="comment mb-4" id="comment-{{ comment.id }}">
+    <div class="d-flex">
+        <div class="flex-shrink-0 me-3">
+            {% if comment.user.profile.avatar %}
+                <img src="{{ comment.user.profile.avatar.url }}" 
+                     class="rounded-circle" 
+                     width="50" 
+                     height="50" 
+                     alt="{{ comment.user.username }}">
+            {% else %}
+                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" 
+                     style="width: 50px; height: 50px;">
+                    <i class="fas fa-user text-white" style="font-size: 1.5rem;"></i>
+                </div>
+            {% endif %}
+        </div>
+        <div class="flex-grow-1">
+            <div class="comment-header d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h6 class="mb-0 fw-bold">{{ comment.user.username }}</h6>
+                    <small class="text-muted">
+                        <i class="far fa-clock me-1"></i>
+                        <span class="comment-date">{{ comment.created_at|timesince }}</span>
+                        {% if comment.is_edited %}<span class="ms-1">(editado)</span>{% endif %}
+                        {% if comment.is_spoiler %}
+                        <span class="badge bg-danger ms-2">Spoiler</span>
+                        {% endif %}
+                    </small>
+                </div>
+                {% if user == comment.user or user.is_staff %}
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-link text-muted p-0" 
+                            type="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        {% if user == comment.user %}
+                        <li>
+                            <a class="dropdown-item edit-comment" href="#" data-comment-id="{{ comment.id }}">
+                                <i class="far fa-edit me-2"></i>Editar
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li>
+                            <a class="dropdown-item text-danger delete-comment" 
+                               href="#" 
+                               data-comment-id="{{ comment.id }}">
+                                <i class="far fa-trash-alt me-2"></i>Eliminar
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="comment-content mb-2">
+                {% if comment.is_spoiler %}
+                <div class="spoiler-content">
+                    <div class="spoiler-alert alert alert-warning py-1 px-2 d-inline-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span class="me-2">¡Atención! Este comentario contiene spoilers</span>
+                        <button class="btn btn-sm btn-outline-warning show-spoiler">
+                            <i class="fas fa-eye me-1"></i> Mostrar
+                        </button>
+                    </div>
+                    <div class="spoiler-text d-none mt-2 p-3 bg-dark rounded">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i> Contenido con spoiler</small>
+                            <button class="btn btn-sm btn-outline-warning hide-spoiler">
+                                <i class="fas fa-eye-slash me-1"></i> Ocultar
+                            </button>
+                        </div>
+                        {{ comment.content|linebreaksbr }}
+                    </div>
+                </div>
+                {% else %}
+                    {{ comment.content|linebreaksbr }}
+                {% endif %}
+            </div>
+            
+            <div class="comment-actions">
+                <button class="btn btn-sm btn-outline-secondary like-comment me-2" 
+                        data-comment-id="{{ comment.id }}">
+                    <i class="far fa-thumbs-up"></i>
+                    <span class="like-count">{{ comment.likes.count }}</span>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary reply-comment me-2" 
+                        data-comment-id="{{ comment.id }}">
+                    <i class="far fa-comment"></i> Responder
+                </button>
+                <button class="btn btn-sm btn-outline-secondary report-comment" 
+                        data-comment-id="{{ comment.id }}">
+                    <i class="far fa-flag"></i>
+                </button>
+            </div>
+            
+            <!-- Reply form (hidden by default) -->
+            <div class="reply-form mt-3 d-none" id="reply-form-{{ comment.id }}">
+                <form class="reply-comment-form" data-parent-id="{{ comment.id }}">
+                    {% csrf_token %}
+                    <div class="mb-2">
+                        <textarea class="form-control bg-dark text-white border-secondary" 
+                                 rows="2" 
+                                 placeholder="Escribe tu respuesta..." 
+                                 required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input spoiler-reply" 
+                                   type="checkbox" 
+                                   id="spoiler-reply-{{ comment.id }}">
+                            <label class="form-check-label" for="spoiler-reply-{{ comment.id }}">
+                                Contiene spoilers
+                            </label>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary me-2 cancel-reply">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                Responder
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Replies -->
+            {% if comment.replies.all %}
+            <div class="replies mt-3 ms-4 ps-3 border-start border-secondary">
+                {% for reply in comment.replies.all %}
+                    {% include 'anime/partials/comment.html' with comment=reply %}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>

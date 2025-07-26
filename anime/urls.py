@@ -28,6 +28,10 @@ urlpatterns = [
         next_page=reverse_lazy('anime:home'),
         template_name='registration/logged_out.html'
     ), name='logout'),
+    
+    # Comments
+    path('anime/<slug:anime_slug>/comment/', views.submit_comment, name='submit_comment'),
+    
     path('password_change/', auth_views.PasswordChangeView.as_view(
         template_name='registration/password_change.html',
         success_url=reverse_lazy('anime:password_change_done')

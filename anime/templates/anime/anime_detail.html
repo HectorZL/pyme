@@ -66,10 +66,10 @@
                                 </div>
                                 
                                 <!-- Favorite Button -->
-                                <button class="btn {% if is_favorite %}btn-warning{% else %}btn-outline-warning{% endif %} favorite-btn" 
+                                <button class="btn {% if is_favorite %}btn-danger{% else %}btn-outline-danger{% endif %} favorite-btn" 
                                         data-anime-id="{{ anime.id }}" 
                                         title="{% if is_favorite %}Quitar de favoritos{% else %}Añadir a favoritos{% endif %}">
-                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-heart"></i>
                                 </button>
                             </div>
                             
@@ -150,22 +150,29 @@
                 {% endif %}
                 
                 <!-- Comments Section -->
-                <div class="card mb-4">
-                    <div class="card-header">
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-header bg-dark text-white">
                         <h5 class="mb-0">Comentarios</h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body bg-dark text-white">
                         {% if user.is_authenticated %}
-                        <form class="mb-4" id="comment-form">
+                        <form id="comment-form" class="mb-4">
                             {% csrf_token %}
                             <div class="form-group">
-                                <textarea class="form-control" rows="3" placeholder="Escribe tu comentario..." required></textarea>
+                                <textarea class="form-control bg-dark text-white border-secondary" 
+                                          id="comment-content" 
+                                          rows="3" 
+                                          placeholder="Escribe tu comentario..." 
+                                          required></textarea>
                             </div>
                             <div class="form-check form-switch mt-2">
                                 <input class="form-check-input" type="checkbox" id="spoiler-check">
                                 <label class="form-check-label" for="spoiler-check">Contiene spoilers</label>
                             </div>
-                            <button type="submit" class="btn btn-primary mt-2">Comentar</button>
+                            <button type="submit" class="btn btn-primary mt-2" id="submit-comment">
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                <span class="btn-text">Comentar</span>
+                            </button>
                         </form>
                         {% else %}
                         <div class="text-center py-3">
@@ -174,7 +181,7 @@
                         </div>
                         {% endif %}
                         
-                        <div id="comments-container">
+                        <div id="comments-container" class="mt-4">
                             {% for comment in comments %}
                                 {% include 'anime/partials/comment.html' with comment=comment %}
                             {% empty %}
@@ -270,62 +277,96 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Status Change Modal -->
+<div class="modal fade" id="statusChangeModal" tabindex="-1" aria-labelledby="statusChangeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="statusChangeModalLabel">Estado actualizado</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="fas fa-check-circle text-success mb-3" style="font-size: 3rem;"></i>
+                <p id="statusMessage" class="mb-0">¡Estado actualizado correctamente!</p>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
 // Update anime status
 function updateAnimeStatus(animeId, status) {
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
+    const csrftoken = getCookie('csrftoken');
+    const statusLabels = {
+        'por_ver': 'Por ver',
+        'viendo': 'Viendo',
+        'finalizado': 'Finalizado'
+    };
+
+    // Create form data
+    const formData = new FormData();
+    formData.append('status', status);
+    formData.append('csrfmiddlewaretoken', csrftoken);
+
     fetch(`/anime/${animeId}/update_status/`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-CSRFToken': csrftoken,
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrftoken
         },
-        body: new URLSearchParams({
-            'status': status
-        })
+        body: formData
     })
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            showToast('success', data.message);
+            // Update UI
+            const dropdownButton = document.querySelector('.btn-group .btn');
+            const dropdownItems = document.querySelectorAll('.dropdown-item');
             
-            // Update UI based on action
-            if (data.action === 'removed') {
-                // Reset status buttons
-                const dropdown = document.querySelector('.dropdown-toggle');
-                dropdown.textContent = 'Añadir a mi lista';
-                dropdown.className = 'btn btn-outline-primary dropdown-toggle w-100';
-                
-                // Remove progress tracker
+            if (status === 'remove') {
+                dropdownButton.textContent = 'Añadir a mi lista';
+                dropdownButton.className = 'btn btn-outline-primary dropdown-toggle';
+                // Remove progress tracker if it exists
                 const progressTracker = document.querySelector('.progress-tracker');
-                if (progressTracker) {
-                    progressTracker.remove();
-                }
+                if (progressTracker) progressTracker.remove();
             } else {
-                // Update status button
-                const dropdown = document.querySelector('.dropdown-toggle');
-                dropdown.textContent = data.user_status.charAt(0).toUpperCase() + data.user_status.slice(1);
+                dropdownButton.textContent = statusLabels[status] || status;
+                dropdownButton.className = `btn ${
+                    status === 'por_ver' ? 'btn-outline-primary' : 
+                    status === 'viendo' ? 'btn-primary' : 
+                    'btn-success'
+                } dropdown-toggle`;
                 
-                // Update button style based on status
-                let btnClass = 'btn-outline-primary';
-                if (data.user_status === 'viendo') {
-                    btnClass = 'btn-primary';
-                } else if (data.user_status === 'finalizado') {
-                    btnClass = 'btn-success';
-                }
-                dropdown.className = `btn ${btnClass} dropdown-toggle w-100`;
-                
-                // Update or create progress tracker
-                updateProgressTracker(anime.episode_count, 0);
+                // Show status change modal
+                const statusMessage = document.getElementById('statusMessage');
+                statusMessage.textContent = `¡Anime añadido a "${statusLabels[status] || status}"!`;
+                const modal = new bootstrap.Modal(document.getElementById('statusChangeModal'));
+                modal.show();
             }
             
-            // Reload the page to show updated data
-            setTimeout(() => window.location.reload(), 1000);
+            // Update active state in dropdown
+            dropdownItems.forEach(item => {
+                const itemStatus = item.getAttribute('data-status');
+                if (itemStatus === status) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+            
+            // Reload the page to update the progress tracker if needed
+            if (status !== 'remove') {
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            }
         } else {
             showToast('error', data.message || 'Error al actualizar el estado');
         }
@@ -338,40 +379,95 @@ function updateAnimeStatus(animeId, status) {
 
 // Toggle favorite status
 document.querySelectorAll('.favorite-btn').forEach(button => {
-    button.addEventListener('click', function(e) {
+    button.addEventListener('click', async function(e) {
         e.preventDefault();
-        const animeId = this.dataset.animeId;
-        const isFavorite = this.classList.contains('btn-warning');
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const animeId = this.getAttribute('data-anime-id');
+        const csrftoken = getCookie('csrftoken');
         
-        fetch(`/anime/${animeId}/toggle_favorite/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRFToken': csrftoken,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: new URLSearchParams({
-                'is_favorite': !isFavorite
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
+        // Show loading state
+        const originalHTML = this.innerHTML;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        this.disabled = true;
+        
+        try {
+            const response = await fetch(`/anime/${animeId}/toggle_favorite/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    'csrfmiddlewaretoken': csrftoken
+                })
+            });
+            
+            const data = await response.json();
+            
             if (data.status === 'success') {
-                this.classList.toggle('btn-warning');
-                this.classList.toggle('btn-outline-warning');
-                this.title = data.is_favorite ? 'Quitar de favoritos' : 'Añadir a favoritos';
+                this.classList.toggle('btn-danger');
+                this.classList.toggle('btn-outline-danger');
+                this.setAttribute('title', data.is_favorite ? 'Quitar de favoritos' : 'Añadir a favoritos');
                 showToast('success', data.message);
             } else {
                 showToast('error', data.message || 'Error al actualizar favoritos');
             }
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Error:', error);
             showToast('error', 'Error de conexión');
-        });
+        } finally {
+            // Restore button state
+            this.innerHTML = '<i class="fas fa-heart"></i>';
+            this.disabled = false;
+        }
     });
 });
+
+// Get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Show toast notifications
+function showToast(type, message) {
+    const toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast, { autohide: true, delay: 3000 });
+    bsToast.show();
+    
+    // Remove toast after it's hidden
+    toast.addEventListener('hidden.bs.toast', function () {
+        toast.remove();
+    });
+}
 
 // Handle status dropdown clicks
 document.querySelectorAll('.dropdown-item[data-status]').forEach(item => {
@@ -425,38 +521,84 @@ function updateProgressTracker(totalEpisodes, watchedEpisodes) {
     }
 }
 
-// Show toast notifications
-function showToast(type, message) {
-    const toastContainer = document.getElementById('toast-container');
-    if (!toastContainer) return;
+// Submit comment form
+$(document).ready(function() {
+    const commentForm = $('#comment-form');
     
-    const toastId = 'toast-' + Date.now();
-    const toastHtml = `
-        <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body">
-                    ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        </div>
-    `;
-    
-    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
-    const toastElement = document.getElementById(toastId);
-    const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 3000 });
-    toast.show();
-    
-    // Remove toast after it's hidden
-    toastElement.addEventListener('hidden.bs.toast', function() {
-        toastElement.remove();
-    });
-}
-
-// Initialize tooltips
-var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
+    if (commentForm.length) {
+        commentForm.on('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = $('#submit-comment');
+            const btnSpinner = submitBtn.find('.spinner-border');
+            const btnText = submitBtn.find('.btn-text');
+            const commentContent = $('#comment-content').val().trim();
+            const isSpoiler = $('#spoiler-check').is(':checked');
+            
+            if (!commentContent) return;
+            
+            // Show loading state
+            submitBtn.prop('disabled', true);
+            btnSpinner.removeClass('d-none');
+            btnText.text('Publicando...');
+            
+            // Get CSRF token from cookie
+            const csrftoken = getCookie('csrftoken');
+            
+            // Send AJAX request
+            $.ajax({
+                url: '{% url "anime:submit_comment" anime.slug %}',
+                type: 'POST',
+                data: JSON.stringify({
+                    content: commentContent,
+                    is_spoiler: isSpoiler
+                }),
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // Clear form
+                        $('#comment-content').val('');
+                        $('#spoiler-check').prop('checked', false);
+                        
+                        // Add new comment to the top of the list
+                        const commentsContainer = $('#comments-container');
+                        const noCommentsMsg = commentsContainer.find('.text-muted');
+                        
+                        if (noCommentsMsg.length) {
+                            noCommentsMsg.remove();
+                        }
+                        
+                        commentsContainer.prepend(response.comment_html);
+                        
+                        // Show success message
+                        showToast('success', '¡Comentario publicado!');
+                    } else {
+                        showToast('error', response.message || 'Error al publicar el comentario');
+                    }
+                },
+                error: function(xhr) {
+                    let errorMsg = 'Error al publicar el comentario';
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.message) {
+                            errorMsg = response.message;
+                        }
+                    } catch (e) {}
+                    showToast('error', errorMsg);
+                },
+                complete: function() {
+                    // Reset button state
+                    submitBtn.prop('disabled', false);
+                    btnSpinner.addClass('d-none');
+                    btnText.text('Comentar');
+                }
+            });
+        });
+    }
 });
 </script>
 {% endblock %}
