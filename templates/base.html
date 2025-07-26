@@ -16,7 +16,6 @@
     <link rel="manifest" href="{% static 'site.webmanifest' %}">
     <meta name="msapplication-TileColor" content="#000000">
     
-
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom CSS -->
@@ -28,6 +27,40 @@
     <link rel="stylesheet" href="{% static 'css/user_anime_list.css' %}">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <style>
+        /* Custom toast styles */
+        .toast {
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .toast-success {
+            background-color: #28a745;
+            border-left: 4px solid #218838;
+        }
+        .toast-error {
+            background-color: #dc3545;
+            border-left: 4px solid #c82333;
+        }
+        .toast-info {
+            background-color: #17a2b8;
+            border-left: 4px solid #138496;
+        }
+        .toast-warning {
+            background-color: #ffc107;
+            border-left: 4px solid #e0a800;
+            color: #212529;
+        }
+        .toast-close-button {
+            color: white;
+            opacity: 0.8;
+        }
+        .toast-close-button:hover {
+            color: white;
+            opacity: 1;
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -181,41 +214,103 @@
         </div>
     </footer>
 
-    <!-- Bootstrap JS -->
+    <!-- Toast Notification Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+        <!-- Toasts will be dynamically inserted here -->
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Custom JS -->
-    <script src="{% static 'js/script.js' %}"></script>
-    
-    {% block extra_js %}{% endblock %}
-    
-    <!-- CSRF token setup for AJAX -->
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
+        // Configure toastr
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": true,
+            "progressBar": true,
+            "positionClass": "toast-bottom-right",
+            "preventDuplicates": true,
+            "onclick": null,
+            "showDuration": 300,
+            "hideDuration": 1000,
+            "timeOut": 5000,
+            "extendedTimeOut": 1000,
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+
+        // Function to show toast notifications
+        function showNotification(type, message, title = '') {
+            // Map notification types to toastr methods
+            const toastTypes = {
+                'success': toastr.success,
+                'error': toastr.error,
+                'info': toastr.info,
+                'warning': toastr.warning
+            };
+
+            // Set icon based on type
+            const icons = {
+                'success': '<i class="fas fa-check-circle me-2"></i>',
+                'error': '<i class="fas fa-exclamation-circle me-2"></i>',
+                'info': '<i class="fas fa-info-circle me-2"></i>',
+                'warning': '<i class="fas fa-exclamation-triangle me-2"></i>'
+            };
+
+            // Show the toast
+            if (toastTypes[type]) {
+                const toast = toastTypes[type](`${icons[type]}${message}`, title, {timeOut: 3000});
+                
+                // Add click handler to manually close the toast
+                $(toast).on('click', function() {
+                    toastr.clear(toast, {force: true});
+                });
+            }
+        }
+
+        // Show any queued messages from Django messages framework
+        {% if messages %}
+            {% for message in messages %}
+                showNotification('{{ message.tags }}', '{{ message|safe }}');
+            {% endfor %}
+        {% endif %}
+    </script>
+    
+    <script>
+        // CSRF token handling
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
                 }
             }
+            return cookieValue;
         }
-        return cookieValue;
-    }
-    const csrftoken = getCookie('csrftoken');
-    
-    // Set up AJAX headers
-    $.ajaxSetup({
-        beforeSend: function(xhr, settings) {
-            if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
-                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        
+        const csrftoken = getCookie('csrftoken');
+        
+        // Set up AJAX headers
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
             }
-        }
-    });
+        });
     </script>
+    
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

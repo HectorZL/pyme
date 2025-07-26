@@ -221,15 +221,17 @@ function getCookie(name) {
     return cookieValue;
 }
 
-const csrftoken = getCookie('csrftoken');
+const csrfToken = getCookie('csrftoken');
 
 // Initialize modal
 const animeStatusModal = new bootstrap.Modal(document.getElementById('animeStatusModal'));
 let currentAnimeId = null;
+let currentAnimeTitle = '';
 
 // Function to open modal with anime data
-function openAnimeStatusModal(animeId, currentStatus = 'por_ver', currentScore = '', progress = 0) {
+function openAnimeStatusModal(animeId, animeTitle, currentStatus = 'por_ver', currentScore = '', progress = 0) {
     currentAnimeId = animeId;
+    currentAnimeTitle = animeTitle;
     document.getElementById('animeId').value = animeId;
     
     // Set the current status
@@ -249,6 +251,40 @@ function openAnimeStatusModal(animeId, currentStatus = 'por_ver', currentScore =
     animeStatusModal.show();
 }
 
+// Function to update favorite status
+function toggleFavorite(animeId, animeTitle, isFavorite) {
+    fetch(`/anime/${animeId}/toggle_favorite/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            is_favorite: !isFavorite
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const favoriteBtn = document.querySelector(`.favorite-btn[data-anime-id="${animeId}"]`);
+            if (favoriteBtn) {
+                favoriteBtn.classList.toggle('active', data.is_favorite);
+                favoriteBtn.setAttribute('data-is-favorite', data.is_favorite);
+                
+                // Show notification
+                const action = data.is_favorite ? 'añadido a' : 'eliminado de';
+                showNotification('success', `"${animeTitle}" ${action} tus favoritos`);
+            }
+        } else {
+            showNotification('error', 'Error al actualizar favoritos');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('error', 'Error al actualizar favoritos');
+    });
+}
+
 // Handle form submission
 document.getElementById('animeStatusForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -258,12 +294,25 @@ document.getElementById('animeStatusForm').addEventListener('submit', function(e
     const score = document.getElementById('score').value;
     const progress = document.getElementById('progress').value;
     
+    // Map status to display text
+    const statusTexts = {
+        'por_ver': 'Por ver',
+        'viendo': 'Viendo',
+        'finalizado': 'Finalizado'
+    };
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+    
     // Send data to server
     fetch(`/anime/${animeId}/update_status/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'X-CSRFToken': csrftoken
+            'X-CSRFToken': csrfToken
         },
         body: `status=${status}&score=${score}&progress=${progress}`
     })
@@ -273,22 +322,80 @@ document.getElementById('animeStatusForm').addEventListener('submit', function(e
             // Close the modal
             animeStatusModal.hide();
             
-            // Reload the page to show updated data
-            window.location.reload();
+            // Show success notification
+            showNotification('success', `"${currentAnimeTitle}" actualizado a "${statusTexts[status] || status}"`);
+            
+            // Reload the page to show updated data after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } else {
-            alert('Error al actualizar el estado del anime');
+            throw new Error(data.message || 'Error al actualizar el estado del anime');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error al actualizar el estado del anime');
+        showNotification('error', error.message || 'Error al actualizar el estado del anime');
+    })
+    .finally(() => {
+        // Reset button state
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
     });
 });
 
-// Add click handlers for all update status buttons
+// Add click handlers for all favorite buttons
 document.addEventListener('DOMContentLoaded', function() {
-    // This will be called when the page loads
-    // Any additional initialization can go here
+    // Handle favorite button clicks
+    document.querySelectorAll('.favorite-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const animeId = this.getAttribute('data-anime-id');
+            const animeTitle = this.getAttribute('data-anime-title') || 'Este anime';
+            const isFavorite = this.getAttribute('data-is-favorite') === 'true';
+            
+            toggleFavorite(animeId, animeTitle, isFavorite);
+        });
+    });
+    
+    // Handle anime card clicks to open status modal
+    document.querySelectorAll('.anime-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const animeId = this.getAttribute('data-anime-id');
+            const animeTitle = this.getAttribute('data-anime-title');
+            const currentStatus = this.getAttribute('data-status') || 'por_ver';
+            const currentScore = this.getAttribute('data-score') || '';
+            const currentProgress = this.getAttribute('data-progress') || '0';
+            
+            openAnimeStatusModal(animeId, animeTitle, currentStatus, currentScore, currentProgress);
+        });
+    });
+    
+    // Show notification if there's a success message in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('status_updated')) {
+        showNotification('success', 'Estado del anime actualizado correctamente');
+        // Clean the URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
 });
+
+// Function to show toast notifications
+function showNotification(type, message) {
+    const toast = document.createElement('div');
+    toast.classList.add('toast', `toast-${type}`);
+    toast.innerHTML = `
+        <div class="toast-header">
+            <strong class="me-auto">${type === 'success' ? 'Éxito' : 'Error'}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">${message}</div>
+    `;
+    document.body.appendChild(toast);
+    const toastElement = new bootstrap.Toast(toast);
+    toastElement.show();
+}
 </script>
 {% endblock %}

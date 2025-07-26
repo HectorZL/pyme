@@ -56,6 +56,7 @@ class Anime(models.Model):
     studio = models.CharField('Estudio', max_length=100, blank=True, null=True)
     created_at = models.DateTimeField('Fecha de creación', auto_now_add=True)
     updated_at = models.DateTimeField('Última actualización', auto_now=True)
+    average_rating = models.FloatField('Puntuación media', default=0.0)
     
     def __str__(self):
         return self.title
@@ -72,6 +73,12 @@ class Anime(models.Model):
         """Calculate average rating from user scores"""
         from django.db.models import Avg
         return self.user_lists.aggregate(avg_rating=Avg('score'))['avg_rating'] or 0.0
+    
+    def update_average_rating(self):
+        ratings = self.ratings.all()
+        if ratings:
+            self.average_rating = sum(r.score for r in ratings) / len(ratings)
+            self.save(update_fields=['average_rating'])
     
     class Meta:
         ordering = ['-created_at']
@@ -248,6 +255,106 @@ class Notification(models.Model):
             message=message,
             related_id=related_id
         )
+
+class Rating(models.Model):
+    """Model for user ratings of anime"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='anime_ratings')
+    anime = models.ForeignKey(Anime, on_delete=models.CASCADE, related_name='ratings')
+    score = models.PositiveSmallIntegerField('Puntuación', choices=[(i, str(i)) for i in range(1, 6)])  # 1-5 stars
+    created_at = models.DateTimeField('Fecha de creación', auto_now_add=True)
+    updated_at = models.DateTimeField('Última actualización', auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'anime')
+        verbose_name = 'Valoración'
+        verbose_name_plural = 'Valoraciones'
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.anime.title}: {self.score} estrellas"
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Update the anime's average rating
+        self.anime.update_average_rating()
+
+class News(models.Model):
+    """Model for news and announcements"""
+    title = models.CharField('Título', max_length=200)
+    slug = models.SlugField('Slug', max_length=200, unique=True)
+    content = models.TextField('Contenido')
+    image = models.ImageField('Imagen', upload_to='news/', blank=True, null=True)
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='news_posts')
+    is_published = models.BooleanField('Publicado', default=False)
+    publication_date = models.DateTimeField('Fecha de publicación', default=timezone.now)
+    created_at = models.DateTimeField('Fecha de creación', auto_now_add=True)
+    updated_at = models.DateTimeField('Última actualización', auto_now=True)
+
+    class Meta:
+        ordering = ['-publication_date']
+        verbose_name = 'Noticia'
+        verbose_name_plural = 'Noticias'
+    
+    def __str__(self):
+        return self.title
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+class ForumThread(models.Model):
+    """Model for forum discussion threads"""
+    title = models.CharField('Título', max_length=200)
+    slug = models.SlugField('Slug', max_length=200, unique=True)
+    content = models.TextField('Contenido')
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='forum_threads')
+    anime = models.ForeignKey(Anime, on_delete=models.CASCADE, related_name='forum_threads', null=True, blank=True)
+    is_pinned = models.BooleanField('Fijado', default=False)
+    is_closed = models.BooleanField('Cerrado', default=False)
+    view_count = models.PositiveIntegerField('Vistas', default=0)
+    created_at = models.DateTimeField('Fecha de creación', auto_now_add=True)
+    updated_at = models.DateTimeField('Última actualización', auto_now=True)
+
+    class Meta:
+        ordering = ['-is_pinned', '-created_at']
+        verbose_name = 'Tema del foro'
+        verbose_name_plural = 'Temas del foro'
+    
+    def __str__(self):
+        return self.title
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+    
+    def get_absolute_url(self):
+        return reverse('forum:thread_detail', kwargs={'slug': self.slug})
+
+class ForumPost(models.Model):
+    """Model for forum posts (replies in threads)"""
+    thread = models.ForeignKey(ForumThread, on_delete=models.CASCADE, related_name='posts')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='forum_posts')
+    content = models.TextField('Contenido')
+    is_edited = models.BooleanField('Editado', default=False)
+    likes = models.ManyToManyField(User, related_name='liked_forum_posts', blank=True)
+    created_at = models.DateTimeField('Fecha de creación', auto_now_add=True)
+    updated_at = models.DateTimeField('Última actualización', auto_now=True)
+
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = 'Mensaje del foro'
+        verbose_name_plural = 'Mensajes del foro'
+    
+    def __str__(self):
+        return f"Respuesta de {self.author.username} en '{self.thread.title}'"
+    
+    def save(self, *args, **kwargs):
+        if self.pk:  # If the post already exists
+            self.is_edited = True
+        super().save(*args, **kwargs)
+        # Update the thread's updated_at timestamp
+        ForumThread.objects.filter(pk=self.thread_id).update(updated_at=timezone.now())
 
 # Signals to create/update user profile when User is created/updated
 from django.db.models.signals import post_save
