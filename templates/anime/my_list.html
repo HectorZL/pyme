@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load anime_filters %}
 
 {% block title %}Mi Lista de Anime{% endblock %}
 
@@ -7,6 +8,33 @@
 <link rel="stylesheet" href="{% static 'css/components/catalog.css' %}?v=1.0.1">
 <link rel="stylesheet" href="{% static 'css/components/buttons.css' %}?v=1.0.1">
 <link rel="stylesheet" href="{% static 'css/components/global.css' %}?v=1.0.1">
+<style>
+    .status-tab {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-radius: 0.25rem;
+    }
+    .status-tab:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .status-tab.active {
+        border-left: 4px solid #FF8C00;
+    }
+    .anime-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 3rem 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 0.5rem;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -18,134 +46,88 @@
         </div>
     </div>
 
-    <!-- Stats Cards -->
+    <!-- Status Tabs -->
     <div class="row mb-4">
-        <div class="col-md-4 mb-3">
-            <div class="card bg-secondary text-white h-100">
+        {% for status_choice in list_choices %}
+        {% with status=status_choice.0 count=status_counts|get_item:status_choice.0|default:0 %}
+        <div class="col-md-4 col-6 mb-3">
+            <div class="card status-tab {% if status == current_status %}active{% endif %}" 
+                 onclick="filterByStatus('{{ status }}')"
+                 style="cursor: pointer;">
                 <div class="card-body">
-                    <h5 class="card-title">Por ver</h5>
-                    <h2 class="display-6">{{ plan_to_watch_count }}</h2>
+                    <h5 class="card-title">
+                        {% if status == 'por_ver' %}
+                            <i class="fas fa-bookmark me-2"></i>Por ver
+                        {% elif status == 'viendo' %}
+                            <i class="fas fa-tv me-2"></i>Viendo
+                        {% elif status == 'finalizado' %}
+                            <i class="fas fa-check-circle me-2"></i>Finalizado
+                        {% elif status == 'en_pausa' %}
+                            <i class="fas fa-pause-circle me-2"></i>En pausa
+                        {% else %}
+                            <i class="fas fa-times-circle me-2"></i>Abandonado
+                        {% endif %}
+                    </h5>
+                    <h2 class="display-6">{{ count }}</h2>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card bg-primary text-white h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Viendo</h5>
-                    <h2 class="display-6">{{ watching_count }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card bg-success text-white h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Finalizado</h5>
-                    <h2 class="display-6">{{ completed_count }}</h2>
-                </div>
-            </div>
-        </div>
+        {% endwith %}
+        {% endfor %}
     </div>
 
-    <!-- Tabs Navigation -->
-    <ul class="nav nav-tabs mb-4" id="animeTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="plan-to-watch-tab" data-bs-toggle="tab" data-bs-target="#plan-to-watch" type="button" role="tab" aria-controls="plan-to-watch" aria-selected="true">
-                <i class="fas fa-bookmark me-1"></i> Por ver <span class="badge bg-secondary">{{ plan_to_watch_count }}</span>
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="watching-tab" data-bs-toggle="tab" data-bs-target="#watching" type="button" role="tab" aria-controls="watching" aria-selected="false">
-                <i class="fas fa-tv me-1"></i> Viendo <span class="badge bg-primary">{{ watching_count }}</span>
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab" aria-controls="completed" aria-selected="false">
-                <i class="fas fa-check-circle me-1"></i> Finalizado <span class="badge bg-success">{{ completed_count }}</span>
-            </button>
-        </li>
-    </ul>
-
-    <!-- Tab Content -->
-    <div class="tab-content" id="animeTabsContent">
-        <!-- Plan to Watch Tab -->
-        <div class="tab-pane fade show active" id="plan-to-watch" role="tabpanel" aria-labelledby="plan-to-watch-tab">
-            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-                {% for user_anime in anime_list %}
-                    {% if user_anime.status == 'plan_to_watch' %}
-                        <div class="col">
-                            {% include 'anime/partials/anime_card.html' with anime=user_anime.anime user_anime=user_anime %}
-                        </div>
+    <!-- Anime Grid -->
+    <div class="anime-grid" id="animeGrid">
+        {% for user_anime in user_anime_list %}
+            {% with anime=user_anime.anime %}
+                {% include 'anime/partials/anime_card.html' with anime=anime user_anime=user_anime favorites=favorites %}
+            {% endwith %}
+        {% empty %}
+            <div class="empty-state">
+                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                <h3>No hay animes en esta sección</h3>
+                <p class="text-muted">
+                    {% if current_status == 'por_ver' %} 
+                        Añade animes a tu lista de "Por ver" para verlos aquí
+                    {% elif current_status == 'viendo' %}
+                        Añade animes a tu lista de "Viendo" para verlos aquí
+                    {% elif current_status == 'finalizado' %}
+                        Marca animes como completados para verlos aquí
+                    {% elif current_status == 'en_pausa' %}
+                        No tienes animes en pausa actualmente
+                    {% else %}
+                        No tienes animes abandonados
                     {% endif %}
-                {% empty %}
-                    <div class="col-12">
-                        <div class="text-center py-5">
-                            <i class="fas fa-bookmark fa-4x text-muted mb-3"></i>
-                            <h3>No tienes animes en tu lista de "Por ver"</h3>
-                            <p class="text-muted">Añade animes a tu lista para verlos aquí</p>
-                            <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-3">
-                                <i class="fas fa-search me-2"></i>Explorar catálogo
-                            </a>
-                        </div>
-                    </div>
-                {% endfor %}
+                </p>
+                <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-3">
+                    <i class="fas fa-search me-2"></i>Explorar catálogo
+                </a>
             </div>
-        </div>
-
-        <!-- Watching Tab -->
-        <div class="tab-pane fade" id="watching" role="tabpanel" aria-labelledby="watching-tab">
-            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-                {% for user_anime in anime_list %}
-                    {% if user_anime.status == 'watching' %}
-                        <div class="col">
-                            {% include 'anime/partials/anime_card.html' with anime=user_anime.anime user_anime=user_anime %}
-                        </div>
-                    {% endif %}
-                {% empty %}
-                    <div class="col-12">
-                        <div class="text-center py-5">
-                            <i class="fas fa-tv fa-4x text-muted mb-3"></i>
-                            <h3>No estás viendo ningún anime actualmente</h3>
-                            <p class="text-muted">Añade animes a tu lista de "Viendo" para verlos aquí</p>
-                            <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-3">
-                                <i class="fas fa-search me-2"></i>Explorar catálogo
-                            </a>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Completed Tab -->
-        <div class="tab-pane fade" id="completed" role="tabpanel" aria-labelledby="completed-tab">
-            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-                {% for user_anime in anime_list %}
-                    {% if user_anime.status == 'completed' %}
-                        <div class="col">
-                            {% include 'anime/partials/anime_card.html' with anime=user_anime.anime user_anime=user_anime %}
-                        </div>
-                    {% endif %}
-                {% empty %}
-                    <div class="col-12">
-                        <div class="text-center py-5">
-                            <i class="fas fa-check-circle fa-4x text-muted mb-3"></i>
-                            <h3>Aún no has completado ningún anime</h3>
-                            <p class="text-muted">Marca animes como completados para verlos aquí</p>
-                            <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-3">
-                                <i class="fas fa-search me-2"></i>Explorar catálogo
-                            </a>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+function filterByStatus(status) {
+    // Update URL with the selected status
+    const url = new URL(window.location.href);
+    url.searchParams.set('status', status);
+    window.location.href = url.toString();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips if needed
+    // Highlight current status tab
+    const currentStatus = '{{ current_status }}';
+    if (currentStatus) {
+        const activeTab = document.querySelector(`[data-status="${currentStatus}"]`);
+        if (activeTab) {
+            activeTab.classList.add('active');
+        }
+    }
+    
+    // Initialize tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);

@@ -132,53 +132,34 @@ class AnimeDetailView(DetailView):
 
 class UserAnimeListView(LoginRequiredMixin, ListView):
     model = UserAnimeList
-    template_name = 'anime/user_anime_list.html'
+    template_name = 'anime/my_list.html'
     context_object_name = 'user_anime_list'
+    paginate_by = 24
     
     def get_queryset(self):
-        # Get the status filter from URL parameters
-        status_filter = self.request.GET.get('status')
+        # Get the status filter from URL parameters, default to 'por_ver'
+        self.status_filter = self.request.GET.get('status', 'por_ver')
         
-        # Base queryset - only get the user's anime with valid slugs
+        # Base queryset - get the user's anime with valid slugs
         queryset = UserAnimeList.objects.filter(
             user=self.request.user,
             anime__slug__isnull=False
-        ).exclude(anime__slug='')
+        ).exclude(anime__slug='').select_related('anime')
         
-        # Apply status filter if provided
-        if status_filter and status_filter in dict(UserAnimeList.LIST_CHOICES):
-            queryset = queryset.filter(status=status_filter)
+        # Apply status filter if provided and valid
+        if self.status_filter and self.status_filter in dict(UserAnimeList.LIST_CHOICES):
+            queryset = queryset.filter(status=self.status_filter)
         
-        return queryset.select_related('anime')
+        # Order by most recently updated
+        return queryset.order_by('-updated_at')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        # Add LIST_CHOICES to context
+        # Add list choices to context
         context['list_choices'] = UserAnimeList.LIST_CHOICES
         
-        # Filter out any entries with empty or None slugs just to be safe
-        valid_entries = [
-            ua for ua in self.object_list 
-            if ua.anime and ua.anime.slug
-        ]
-        
-        # Create a dictionary of anime IDs to their status for the template
-        context['user_anime'] = {
-            ua.anime_id: ua.status 
-            for ua in valid_entries
-        }
-        
-        # Get a list of anime objects for the template (for the anime cards)
-        context['animes'] = [ua.anime for ua in valid_entries]
-        
-        # Add favorites for the template
-        context['favorites'] = set(
-            ua.anime_id for ua in valid_entries
-            if ua.is_favorite
-        )
-        
-        # Get status counts for the filter tabs, excluding entries with invalid slugs
+        # Get status counts for all statuses
         status_counts = UserAnimeList.objects.filter(
             user=self.request.user,
             anime__slug__isnull=False
@@ -192,11 +173,27 @@ class UserAnimeListView(LoginRequiredMixin, ListView):
             for item in status_counts
         }
         
-        # Add total count
-        context['total_count'] = sum(context['status_counts'].values())
+        # Ensure all statuses are in the dictionary with count 0
+        for status_choice in UserAnimeList.LIST_CHOICES:
+            if status_choice[0] not in context['status_counts']:
+                context['status_counts'][status_choice[0]] = 0
         
-        # Add current status filter
-        context['current_status'] = self.request.GET.get('status', 'all')
+        # Add current status filter to context
+        context['current_status'] = self.status_filter
+        
+        # Add user's anime status for the template
+        user_anime = UserAnimeList.objects.filter(
+            user=self.request.user,
+            anime_id__in=[ua.anime_id for ua in self.object_list]
+        )
+        
+        context['user_anime_dict'] = {ua.anime_id: ua for ua in user_anime}
+        
+        # Add favorites for the template
+        context['favorites'] = set(
+            ua.anime_id for ua in user_anime
+            if ua.is_favorite
+        )
         
         return context
 
@@ -205,13 +202,56 @@ class FavoritesView(LoginRequiredMixin, ListView):
     model = UserAnimeList
     template_name = 'anime/favorites.html'
     context_object_name = 'favorites'
+    paginate_by = 12
     
     def get_queryset(self):
+        # Clean up any favorites with no associated anime first
+        invalid_favorites = UserAnimeList.objects.filter(
+            user=self.request.user,
+            is_favorite=True,
+            anime__isnull=True
+        )
+        invalid_favorites.delete()
+        
+        # Get valid favorites
         return UserAnimeList.objects.filter(
             user=self.request.user,
             is_favorite=True,
-            anime__isnull=False
-        ).select_related('anime')
+            anime__isnull=False,
+            anime__slug__isnull=False  # Only include favorites with valid slugs
+        ).select_related('anime').order_by('-updated_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Filter out any favorites with invalid slugs from the template context
+        valid_favorites = [
+            fav for fav in context['favorites'] 
+            if hasattr(fav, 'anime') and fav.anime and fav.anime.slug
+        ]
+        context['favorites'] = valid_favorites
+        
+        # Add user's anime status for the template
+        if valid_favorites:
+            user_anime = UserAnimeList.objects.filter(
+                user=self.request.user,
+                anime_id__in=[fav.anime_id for fav in valid_favorites if hasattr(fav, 'anime_id')]
+            )
+            context['user_anime_dict'] = {ua.anime_id: ua.status for ua in user_anime}
+            
+            # Add favorites for the template
+            context['favorites_set'] = set(
+                ua.anime_id for ua in user_anime
+                if ua.is_favorite
+            )
+        else:
+            context['user_anime_dict'] = {}
+            context['favorites_set'] = set()
+        
+        # Add list choices for status dropdown
+        context['list_choices'] = UserAnimeList.LIST_CHOICES
+        
+        return context
 
 class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'profile.html'
@@ -339,7 +379,7 @@ def update_anime_list(request):
             user_anime, created = UserAnimeList.objects.get_or_create(
                 user=request.user,
                 anime=anime,
-                defaults={'status': 'plan_to_watch', 'is_favorite': True}
+                defaults={'status': 'por_ver', 'is_favorite': True}
             )
             
             # Toggle favorite status

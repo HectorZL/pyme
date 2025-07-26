@@ -40,16 +40,17 @@
             {% if user.is_authenticated %}
                 <div class="d-flex gap-2 mt-auto">
                     <div class="btn-group flex-grow-1" role="group">
-                        {% with status=user_anime|get_item:anime.id %}
-                        <button type="button" class="btn {% if status %}btn-{{ status }}{% else %}btn-outline-primary{% endif %} add-to-list-btn" 
+                        {% if user_anime %}
+                        <button type="button" class="btn btn-{{ user_anime.status }} add-to-list-btn" 
                                 data-anime-id="{{ anime.id }}">
-                            {% if status %}
-                                {{ status|title }}
-                            {% else %}
-                                Añadir a mi lista
-                            {% endif %}
+                            {{ user_anime.get_status_display }}
                         </button>
-                        {% endwith %}
+                        {% else %}
+                        <button type="button" class="btn btn-outline-primary add-to-list-btn" 
+                                data-anime-id="{{ anime.id }}">
+                            Añadir a mi lista
+                        </button>
+                        {% endif %}
                     </div>
                     
                     <button class="btn btn-outline-danger favorite-btn {% if anime.id in favorites %}active{% endif %}" 

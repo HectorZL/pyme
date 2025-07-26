@@ -121,6 +121,7 @@
     {% if favorites %}
         <div class="favorites-grid">
             {% for favorite in favorites %}
+                {% if favorite.anime and favorite.anime.slug %}
                 <div class="favorite-card">
                     <a href="{% url 'anime:anime_detail' favorite.anime.slug %}">
                         {% if favorite.anime.image %}
@@ -133,23 +134,39 @@
                     </a>
                     <div class="favorite-actions">
                         <div class="favorite-info">
-                            <h5 class="favorite-title">{{ favorite.anime.title }}</h5>
-                            <span class="badge bg-secondary">{{ favorite.get_status_display }}</span>
+                            <h5 class="mb-1">{{ favorite.anime.title|default:"Título no disponible" }}</h5>
+                            {% if favorite.anime.year %}
+                                <small class="text-muted">{{ favorite.anime.year }}</small>
+                            {% endif %}
                         </div>
-                        <button class="favorite-remove" data-anime-id="{{ favorite.anime.id }}" title="Quitar de favoritos">
-                            <i class="fas fa-times"></i>
-                        </button>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-danger favorite-remove" 
+                                    data-anime-id="{{ favorite.anime.id }}"
+                                    title="Quitar de favoritos">
+                                <i class="fas fa-heart-broken"></i>
+                            </button>
+                        </div>
                     </div>
+                </div>
+                {% endif %}
+            {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-heart-broken fa-4x text-muted mb-3"></i>
+                    <h4>No tienes animes favoritos aún</h4>
+                    <p class="text-muted">¡Añade animes a tus favoritos para verlos aquí!</p>
+                    <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-2">
+                        <i class="fas fa-search me-2"></i>Explorar catálogo
+                    </a>
                 </div>
             {% endfor %}
         </div>
     {% else %}
-        <div class="no-favorites">
-            <i class="far fa-heart"></i>
-            <h3>No tienes favoritos aún</h3>
-            <p class="text-muted">Añade animes a tus favoritos para verlos aquí</p>
-            <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-3">
-                <i class="fas fa-search me-2"></i>Explorar Catálogo
+        <div class="text-center py-5">
+            <i class="fas fa-heart-broken fa-4x text-muted mb-3"></i>
+            <h4>No tienes animes favoritos aún</h4>
+            <p class="text-muted">¡Añade animes a tus favoritos para verlos aquí!</p>
+            <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-2">
+                <i class="fas fa-search me-2"></i>Explorar catálogo
             </a>
         </div>
     {% endif %}
