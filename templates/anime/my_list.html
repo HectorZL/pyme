@@ -12,27 +12,56 @@
     .status-tab {
         cursor: pointer;
         transition: all 0.3s ease;
-        border-radius: 0.25rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        height: 100%;
     }
     .status-tab:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
     }
     .status-tab.active {
-        border-left: 4px solid #FF8C00;
+        border-left: 5px solid #FF8C00;
+        background-color: rgba(255, 140, 0, 0.05);
+    }
+    .card-body {
+        padding: 1.5rem;
+    }
+    .card-title {
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+    .display-6 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+        color: #FF8C00;
     }
     .anime-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1.5rem;
-        margin-top: 1.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
     }
     .empty-state {
         grid-column: 1 / -1;
         text-align: center;
-        padding: 3rem 1rem;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 0.5rem;
+        padding: 4rem 2rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 1rem;
+        margin: 2rem 0;
+    }
+    .status-tab .card-body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+    .status-tab i {
+        font-size: 1.8rem;
+        margin-bottom: 0.8rem;
+        color: #FF8C00;
     }
 </style>
 {% endblock %}
@@ -62,10 +91,6 @@
                             <i class="fas fa-tv me-2"></i>Viendo
                         {% elif status == 'finalizado' %}
                             <i class="fas fa-check-circle me-2"></i>Finalizado
-                        {% elif status == 'en_pausa' %}
-                            <i class="fas fa-pause-circle me-2"></i>En pausa
-                        {% else %}
-                            <i class="fas fa-times-circle me-2"></i>Abandonado
                         {% endif %}
                     </h5>
                     <h2 class="display-6">{{ count }}</h2>
@@ -93,10 +118,6 @@
                         Añade animes a tu lista de "Viendo" para verlos aquí
                     {% elif current_status == 'finalizado' %}
                         Marca animes como completados para verlos aquí
-                    {% elif current_status == 'en_pausa' %}
-                        No tienes animes en pausa actualmente
-                    {% else %}
-                        No tienes animes abandonados
                     {% endif %}
                 </p>
                 <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-3">

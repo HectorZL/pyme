@@ -112,8 +112,6 @@ class UserAnimeList(models.Model):
         ('por_ver', 'Por ver'),
         ('viendo', 'Viendo'),
         ('finalizado', 'Finalizado'),
-        ('en_pausa', 'En pausa'),
-        ('abandonado', 'Abandonado'),
     ]
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='anime_lists', verbose_name='Usuario')
