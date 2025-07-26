@@ -22,117 +22,79 @@
     <!-- Status Tabs -->
     <ul class="nav nav-tabs mb-4" id="statusTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link {% if active_status == 'watching' or not active_status %}active{% endif %}" 
-                    id="watching-tab" 
+            <button class="nav-link {% if active_status == 'por_ver' or not active_status %}active{% endif %}" 
+                    id="porver-tab" 
                     data-bs-toggle="tab" 
-                    data-bs-target="#watching" 
+                    data-bs-target="#porver" 
                     type="button" 
                     role="tab" 
-                    aria-controls="watching" 
-                    aria-selected="{% if active_status == 'watching' or not active_status %}true{% else %}false{% endif %}">
-                <i class="fas fa-tv me-1"></i> Viendo
-                <span class="badge bg-primary ms-1">{{ status_counts.watching|default:0 }}</span>
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link {% if active_status == 'completed' %}active{% endif %}" 
-                    id="completed-tab" 
-                    data-bs-toggle="tab" 
-                    data-bs-target="#completed" 
-                    type="button" 
-                    role="tab" 
-                    aria-controls="completed" 
-                    aria-selected="{% if active_status == 'completed' %}true{% else %}false{% endif %}">
-                <i class="fas fa-check-circle me-1"></i> Completados
-                <span class="badge bg-success ms-1">{{ status_counts.completed|default:0 }}</span>
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link {% if active_status == 'on_hold' %}active{% endif %}" 
-                    id="onhold-tab" 
-                    data-bs-toggle="tab" 
-                    data-bs-target="#onhold" 
-                    type="button" 
-                    role="tab" 
-                    aria-controls="onhold" 
-                    aria-selected="{% if active_status == 'on_hold' %}true{% else %}false{% endif %}">
-                <i class="fas fa-pause-circle me-1"></i> En pausa
-                <span class="badge bg-warning text-dark ms-1">{{ status_counts.on_hold|default:0 }}</span>
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link {% if active_status == 'dropped' %}active{% endif %}" 
-                    id="dropped-tab" 
-                    data-bs-toggle="tab" 
-                    data-bs-target="#dropped" 
-                    type="button" 
-                    role="tab" 
-                    aria-controls="dropped" 
-                    aria-selected="{% if active_status == 'dropped' %}true{% else %}false{% endif %}">
-                <i class="fas fa-times-circle me-1"></i> Abandonados
-                <span class="badge bg-danger ms-1">{{ status_counts.dropped|default:0 }}</span>
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link {% if active_status == 'plan_to_watch' %}active{% endif %}" 
-                    id="plantowatch-tab" 
-                    data-bs-toggle="tab" 
-                    data-bs-target="#plantowatch" 
-                    type="button" 
-                    role="tab" 
-                    aria-controls="plantowatch" 
-                    aria-selected="{% if active_status == 'plan_to_watch' %}true{% else %}false{% endif %}">
+                    aria-controls="porver" 
+                    aria-selected="{% if active_status == 'por_ver' or not active_status %}true{% else %}false{% endif %}">
                 <i class="fas fa-bookmark me-1"></i> Por ver
-                <span class="badge bg-secondary ms-1">{{ status_counts.plan_to_watch|default:0 }}</span>
+                <span class="badge bg-secondary ms-1">{{ status_counts.por_ver|default:0 }}</span>
             </button>
         </li>
-        <!-- Favorites Tab -->
         <li class="nav-item" role="presentation">
-            <button class="nav-link {% if active_status == 'favorites' %}active{% endif %}" 
-                    id="favorites-tab" 
+            <button class="nav-link {% if active_status == 'viendo' %}active{% endif %}" 
+                    id="viendo-tab" 
                     data-bs-toggle="tab" 
-                    data-bs-target="#favorites" 
+                    data-bs-target="#viendo" 
                     type="button" 
                     role="tab" 
-                    aria-controls="favorites" 
-                    aria-selected="{% if active_status == 'favorites' %}true{% else %}false{% endif %}">
-                <i class="fas fa-heart me-1"></i> Favoritos
-                <span class="badge bg-danger ms-1">{{ favorites_count|default:0 }}</span>
+                    aria-controls="viendo" 
+                    aria-selected="{% if active_status == 'viendo' %}true{% else %}false{% endif %}">
+                <i class="fas fa-tv me-1"></i> Viendo
+                <span class="badge bg-primary ms-1">{{ status_counts.viendo|default:0 }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if active_status == 'finalizado' %}active{% endif %}" 
+                    id="finalizado-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#finalizado" 
+                    type="button" 
+                    role="tab" 
+                    aria-controls="finalizado" 
+                    aria-selected="{% if active_status == 'finalizado' %}true{% else %}false{% endif %}">
+                <i class="fas fa-check-circle me-1"></i> Finalizado
+                <span class="badge bg-success ms-1">{{ status_counts.finalizado|default:0 }}</span>
             </button>
         </li>
     </ul>
     
     <div class="tab-content" id="animeListContent">
-        <!-- All Tab -->
-        <div class="tab-pane fade show {% if not active_status or active_status == 'all' %}show active{% endif %}" 
-             id="all" role="tabpanel" aria-labelledby="all-tab">
-            {% if user_anime_list %}
-                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-                    {% for item in user_anime_list %}
-                        {% with anime=item.anime %}
-                            {% include 'anime/partials/anime_card.html' with status=item.status %}
-                        {% endwith %}
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
-                    <h3 class="h4">Tu lista está vacía</h3>
-                    <p class="text-muted">¡Explora el catálogo y comienza a añadir animes a tu lista!</p>
-                    <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-2">
-                        <i class="fas fa-search me-1"></i> Explorar Catálogo
-                    </a>
-                </div>
-            {% endif %}
+        <!-- Por Ver Tab -->
+        <div class="tab-pane fade {% if active_status == 'por_ver' or not active_status %}show active{% endif %}" 
+             id="porver" role="tabpanel" aria-labelledby="porver-tab">
+            {% with por_ver_list=user_anime_list|filter_by_status:'por_ver' %}
+                {% if por_ver_list %}
+                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+                        {% for item in por_ver_list %}
+                            {% with anime=item.anime %}
+                                {% include 'anime/partials/anime_card.html' with status=item.status %}
+                            {% endwith %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-bookmark fa-4x text-muted mb-3"></i>
+                        <h3 class="h4">No tienes animes por ver</h3>
+                        <p class="text-muted">Añade animes a tu lista para verlos aquí.</p>
+                        <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-2">
+                            <i class="fas fa-search me-1"></i> Explorar Catálogo
+                        </a>
+                    </div>
+                {% endif %}
+            {% endwith %}
         </div>
         
-        <!-- Watching Tab -->
-        <div class="tab-pane fade {% if active_status == 'watching' %}show active{% endif %}" 
-             id="watching" role="tabpanel" aria-labelledby="watching-tab">
-            {% with watching_list=user_anime_list|filter_by_status:'watching' %}
-                {% if watching_list %}
+        <!-- Viendo Tab -->
+        <div class="tab-pane fade {% if active_status == 'viendo' %}show active{% endif %}" 
+             id="viendo" role="tabpanel" aria-labelledby="viendo-tab">
+            {% with viendo_list=user_anime_list|filter_by_status:'viendo' %}
+                {% if viendo_list %}
                     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-                        {% for item in watching_list %}
+                        {% for item in viendo_list %}
                             {% with anime=item.anime %}
                                 {% include 'anime/partials/anime_card.html' with status=item.status %}
                             {% endwith %}
@@ -143,18 +105,21 @@
                         <i class="fas fa-tv fa-4x text-muted mb-3"></i>
                         <h3 class="h4">No estás viendo ningún anime</h3>
                         <p class="text-muted">Añade animes a tu lista y márcalos como 'Viendo' para verlos aquí.</p>
+                        <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-2">
+                            <i class="fas fa-search me-1"></i> Explorar Catálogo
+                        </a>
                     </div>
                 {% endif %}
             {% endwith %}
         </div>
         
-        <!-- Completed Tab -->
-        <div class="tab-pane fade {% if active_status == 'completed' %}show active{% endif %}" 
-             id="completed" role="tabpanel" aria-labelledby="completed-tab">
-            {% with completed_list=user_anime_list|filter_by_status:'completed' %}
-                {% if completed_list %}
+        <!-- Finalizado Tab -->
+        <div class="tab-pane fade {% if active_status == 'finalizado' %}show active{% endif %}" 
+             id="finalizado" role="tabpanel" aria-labelledby="finalizado-tab">
+            {% with finalizado_list=user_anime_list|filter_by_status:'finalizado' %}
+                {% if finalizado_list %}
                     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-                        {% for item in completed_list %}
+                        {% for item in finalizado_list %}
                             {% with anime=item.anime %}
                                 {% include 'anime/partials/anime_card.html' with status=item.status %}
                             {% endwith %}
@@ -164,95 +129,10 @@
                     <div class="text-center py-5">
                         <i class="fas fa-check-circle fa-4x text-muted mb-3"></i>
                         <h3 class="h4">No has completado ningún anime</h3>
-                        <p class="text-muted">Marca los animes como 'Completados' para verlos aquí.</p>
-                    </div>
-                {% endif %}
-            {% endwith %}
-        </div>
-        
-        <!-- On Hold Tab -->
-        <div class="tab-pane fade {% if active_status == 'on_hold' %}show active{% endif %}" 
-             id="onhold" role="tabpanel" aria-labelledby="onhold-tab">
-            {% with on_hold_list=user_anime_list|filter_by_status:'on_hold' %}
-                {% if on_hold_list %}
-                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-                        {% for item in on_hold_list %}
-                            {% with anime=item.anime %}
-                                {% include 'anime/partials/anime_card.html' with status=item.status %}
-                            {% endwith %}
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="text-center py-5">
-                        <i class="fas fa-pause-circle fa-4x text-muted mb-3"></i>
-                        <h3 class="h4">No tienes animes en pausa</h3>
-                        <p class="text-muted">Marca los animes como 'En pausa' para verlos aquí.</p>
-                    </div>
-                {% endif %}
-            {% endwith %}
-        </div>
-        
-        <!-- Dropped Tab -->
-        <div class="tab-pane fade {% if active_status == 'dropped' %}show active{% endif %}" 
-             id="dropped" role="tabpanel" aria-labelledby="dropped-tab">
-            {% with dropped_list=user_anime_list|filter_by_status:'dropped' %}
-                {% if dropped_list %}
-                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-                        {% for item in dropped_list %}
-                            {% with anime=item.anime %}
-                                {% include 'anime/partials/anime_card.html' with status=item.status %}
-                            {% endwith %}
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="text-center py-5">
-                        <i class="fas fa-times-circle fa-4x text-muted mb-3"></i>
-                        <h3 class="h4">No has abandonado ningún anime</h3>
-                        <p class="text-muted">Marca los animes como 'Abandonados' para verlos aquí.</p>
-                    </div>
-                {% endif %}
-            {% endwith %}
-        </div>
-        
-        <!-- Plan to Watch Tab -->
-        <div class="tab-pane fade {% if active_status == 'plan_to_watch' %}show active{% endif %}" 
-             id="plantowatch" role="tabpanel" aria-labelledby="plantowatch-tab">
-            {% with plan_to_watch_list=user_anime_list|filter_by_status:'plan_to_watch' %}
-                {% if plan_to_watch_list %}
-                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-                        {% for item in plan_to_watch_list %}
-                            {% with anime=item.anime %}
-                                {% include 'anime/partials/anime_card.html' with status=item.status %}
-                            {% endwith %}
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="text-center py-5">
-                        <i class="fas fa-bookmark fa-4x text-muted mb-3"></i>
-                        <h3 class="h4">No tienes animes en tu lista de pendientes</h3>
-                        <p class="text-muted">Añade animes a tu lista y márcalos como 'Por ver' para verlos aquí.</p>
-                    </div>
-                {% endif %}
-            {% endwith %}
-        </div>
-        
-        <!-- Favorites Tab -->
-        <div class="tab-pane fade {% if active_status == 'favorites' %}show active{% endif %}" 
-             id="favorites" role="tabpanel" aria-labelledby="favorites-tab">
-            {% with favorites_list=user_anime_list|filter_favorites:True %}
-                {% if favorites_list %}
-                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
-                        {% for item in favorites_list %}
-                            {% with anime=item.anime %}
-                                {% include 'anime/partials/anime_card.html' with status=item.status %}
-                            {% endwith %}
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="text-center py-5">
-                        <i class="fas fa-heart fa-4x text-muted mb-3"></i>
-                        <h3 class="h4">No tienes animes favoritos</h3>
-                        <p class="text-muted">Haz clic en el corazón en cualquier tarjeta de anime para añadirlo a tus favoritos.</p>
+                        <p class="text-muted">Marca los animes como 'Finalizado' para verlos aquí.</p>
+                        <a href="{% url 'anime:catalog' %}" class="btn btn-primary mt-2">
+                            <i class="fas fa-search me-1"></i> Explorar Catálogo
+                        </a>
                     </div>
                 {% endif %}
             {% endwith %}
@@ -265,45 +145,59 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="animeStatusModalLabel">Actualizar estado</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="animeStatusModalLabel">Actualizar estado del anime</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <div class="modal-body">
-                <form id="animeStatusForm">
-                    <input type="hidden" name="anime_id" id="animeId">
+            <form id="animeStatusForm">
+                <div class="modal-body">
+                    <input type="hidden" id="animeId" name="anime_id">
                     <div class="mb-3">
-                        <label for="statusSelect" class="form-label">Estado</label>
-                        <select class="form-select" id="statusSelect" name="status" required>
-                            <option value="watching">Viendo</option>
-                            <option value="completed">Completado</option>
-                            <option value="on_hold">En pausa</option>
-                            <option value="dropped">Abandonado</option>
-                            <option value="plan_to_watch">Por ver</option>
+                        <label class="form-label">Estado</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="status" id="statusPorVer" value="por_ver" checked>
+                            <label class="form-check-label" for="statusPorVer">
+                                <i class="fas fa-bookmark text-secondary me-1"></i> Por ver
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="status" id="statusViendo" value="viendo">
+                            <label class="form-check-label" for="statusViendo">
+                                <i class="fas fa-tv text-primary me-1"></i> Viendo
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="status" id="statusFinalizado" value="finalizado">
+                            <label class="form-check-label" for="statusFinalizado">
+                                <i class="fas fa-check-circle text-success me-1"></i> Finalizado
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="score" class="form-label">Puntuación (opcional)</label>
+                        <select class="form-select" id="score" name="score">
+                            <option value="">Sin puntuación</option>
+                            <option value="10">(10) Excelente</option>
+                            <option value="9">(9) Muy bueno</option>
+                            <option value="8">(8) Bueno</option>
+                            <option value="7">(7) Por encima del promedio</option>
+                            <option value="6">(6) Aceptable</option>
+                            <option value="5">(5) Promedio</option>
+                            <option value="4">(4) Por debajo del promedio</option>
+                            <option value="3">(3) Malo</option>
+                            <option value="2">(2) Muy malo</option>
+                            <option value="1">(1) Pésimo</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="episodesWatched" class="form-label">Episodios vistos</label>
-                        <input type="number" class="form-control" id="episodesWatched" name="episodes_watched" min="0">
+                        <label for="progress" class="form-label">Episodios vistos</label>
+                        <input type="number" class="form-control" id="progress" name="progress" min="0">
                     </div>
-                    <div class="mb-3">
-                        <label for="score" class="form-label">Puntuación (1-10)</label>
-                        <input type="number" class="form-control" id="score" name="score" min="1" max="10">
-                    </div>
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">Notas</label>
-                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-outline-danger" id="removeFromList">
-                            <i class="fas fa-trash-alt me-1"></i> Eliminar de mi lista
-                        </button>
-                        <div>
-                            <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">Guardar cambios</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -311,7 +205,7 @@
 
 {% block extra_js %}
 <script>
-// Add CSRF token handling
+// Function to get CSRF token
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -331,104 +225,29 @@ const csrftoken = getCookie('csrftoken');
 
 // Initialize modal
 const animeStatusModal = new bootstrap.Modal(document.getElementById('animeStatusModal'));
+let currentAnimeId = null;
 
-// Handle tab state in URL
-const urlParams = new URLSearchParams(window.location.search);
-const status = urlParams.get('status');
-
-if (status) {
-    const tab = document.querySelector(`[data-bs-target="#${status}"]`);
-    if (tab) {
-        const tabInstance = new bootstrap.Tab(tab);
-        tabInstance.show();
+// Function to open modal with anime data
+function openAnimeStatusModal(animeId, currentStatus = 'por_ver', currentScore = '', progress = 0) {
+    currentAnimeId = animeId;
+    document.getElementById('animeId').value = animeId;
+    
+    // Set the current status
+    document.querySelector(`input[name="status"][value="${currentStatus}"]`).checked = true;
+    
+    // Set the current score if exists
+    if (currentScore) {
+        document.getElementById('score').value = currentScore;
+    } else {
+        document.getElementById('score').value = '';
     }
+    
+    // Set the current progress
+    document.getElementById('progress').value = progress;
+    
+    // Show the modal
+    animeStatusModal.show();
 }
-
-// Update URL when tab changes
-document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
-    tab.addEventListener('shown.bs.tab', function (e) {
-        const tabId = e.target.getAttribute('data-bs-target').substring(1);
-        const url = new URL(window.location);
-        url.searchParams.set('status', tabId);
-        window.history.pushState({}, '', url);
-    });
-});
-
-// Handle favorite button clicks
-document.querySelectorAll('.favorite-btn').forEach(button => {
-    button.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const animeId = this.dataset.animeId;
-        const isFavorite = this.classList.contains('active');
-        const icon = this.querySelector('i');
-        
-        fetch(`/anime/${animeId}/toggle_favorite/`, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrftoken,
-                'Content-Type': 'application/json',  
-            },
-            body: JSON.stringify({ anime_id: parseInt(animeId) })  
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                this.classList.toggle('active');
-                if (icon) {
-                    icon.classList.toggle('fas', data.is_favorite);
-                    icon.classList.toggle('far', !data.is_favorite);
-                }
-                
-                // Update favorite count if element exists
-                const favoriteCount = document.querySelector(`.favorite-count[data-anime-id="${animeId}"]`);
-                if (favoriteCount) {
-                    favoriteCount.textContent = data.favorite_count;
-                }
-                
-                // Show success message
-                const alert = document.createElement('div');
-                alert.className = 'alert alert-success alert-dismissible fade show mt-3';
-                alert.role = 'alert';
-                alert.innerHTML = `
-                    <strong>¡Éxito!</strong> ${data.message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                `;
-                const container = document.querySelector('.container.mt-4');
-                if (container) {
-                    container.insertBefore(alert, container.firstChild);
-                    setTimeout(() => alert.remove(), 3000);
-                }
-            } else {
-                throw new Error(data.message || 'Error al actualizar favoritos');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al actualizar favoritos: ' + error.message);
-        });
-    });
-});
-
-// Handle anime card clicks to show modal
-document.querySelectorAll('.anime-card').forEach(card => {
-    card.addEventListener('click', function(e) {
-        // Only open modal if not clicking on a link or button
-        if (!e.target.closest('a') && !e.target.closest('button')) {
-            const animeId = this.dataset.animeId;
-            const title = this.dataset.title;
-            const currentStatus = this.dataset.status || 'plan_to_watch';
-            
-            // Update modal with anime info
-            document.getElementById('animeId').value = animeId;
-            document.getElementById('animeTitle').textContent = title;
-            document.querySelector(`#animeStatusForm input[name="status"][value="${currentStatus}"]`).checked = true;
-            
-            // Show the modal
-            animeStatusModal.show();
-        }
-    });
-});
 
 // Handle form submission
 document.getElementById('animeStatusForm').addEventListener('submit', function(e) {
@@ -436,19 +255,17 @@ document.getElementById('animeStatusForm').addEventListener('submit', function(e
     
     const animeId = document.getElementById('animeId').value;
     const status = document.querySelector('input[name="status"]:checked').value;
+    const score = document.getElementById('score').value;
+    const progress = document.getElementById('progress').value;
     
-    // Send AJAX request to update status
+    // Send data to server
     fetch(`/anime/${animeId}/update_status/`, {
         method: 'POST',
         headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRFToken': csrftoken,
-            'Content-Type': 'application/json',  
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken
         },
-        body: JSON.stringify({
-            anime_id: parseInt(animeId),
-            status: status
-        })
+        body: `status=${status}&score=${score}&progress=${progress}`
     })
     .then(response => response.json())
     .then(data => {
@@ -456,65 +273,22 @@ document.getElementById('animeStatusForm').addEventListener('submit', function(e
             // Close the modal
             animeStatusModal.hide();
             
-            // Show success message
-            const alert = document.createElement('div');
-            alert.className = 'alert alert-success alert-dismissible fade show mt-3';
-            alert.role = 'alert';
-            alert.innerHTML = `
-                <strong>¡Éxito!</strong> ${data.message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            `;
-            
-            const container = document.querySelector('.container.mt-4');
-            if (container) {
-                container.insertBefore(alert, container.firstChild);
-                setTimeout(() => alert.remove(), 3000);
-            }
-            
-            // Reload the page to reflect changes
-            setTimeout(() => {
-                window.location.reload();
-            }, 500);
+            // Reload the page to show updated data
+            window.location.reload();
         } else {
-            throw new Error(data.message || 'Error al actualizar el estado');
+            alert('Error al actualizar el estado del anime');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error al actualizar el estado: ' + error.message);
+        alert('Error al actualizar el estado del anime');
     });
 });
 
-// Handle remove from list button
-document.getElementById('removeFromList').addEventListener('click', function() {
-    if (confirm('¿Estás seguro de que deseas eliminar este anime de tu lista?')) {
-        const animeId = document.getElementById('animeId').value;
-        
-        // Send AJAX request to remove from list
-        fetch(`/anime/${animeId}/remove_from_list/`, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrftoken,
-                'Content-Type': 'application/json',  
-            },
-            body: JSON.stringify({ anime_id: parseInt(animeId) })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                animeStatusModal.hide();
-                // Reload to show changes
-                window.location.reload();
-            } else {
-                throw new Error(data.message || 'Error al eliminar de la lista');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al eliminar de la lista: ' + error.message);
-        });
-    }
+// Add click handlers for all update status buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // This will be called when the page loads
+    // Any additional initialization can go here
 });
 </script>
 {% endblock %}
