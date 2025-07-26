@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block title %}Perfil de {{ user.username }} - el pyme anime{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/components/global.css' %}">
 <style>
@@ -59,18 +60,46 @@
     .bg-primary {
         background-color: #0d6efd !important;
     }
+    .anime-card {
+        transition: transform 0.2s;
+    }
+    .anime-card:hover {
+        transform: translateY(-5px);
+    }
+    .status-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 0.7rem;
+    }
 </style>
 {% endblock %}
+
 {% block content %}
 <div class="container py-5">
+    <!-- Mensajes de éxito/error -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
     <div class="row">
         <!-- Sidebar -->
         <div class="col-md-4 mb-4">
             <div class="card shadow-sm">
                 <div class="card-body text-center">
                     <div class="position-relative mb-3">
-                        <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=random&size=150&rounded=true" 
-                             alt="{{ user.username }}" class="rounded-circle img-thumbnail" style="width: 150px; height: 150px; object-fit: cover;">
+                        {% if user.profile.avatar %}
+                            <img src="{{ user.profile.avatar.url }}" 
+                                 alt="{{ user.username }}" class="rounded-circle img-thumbnail" style="width: 150px; height: 150px; object-fit: cover;">
+                        {% else %}
+                            <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=random&size=150&rounded=true" 
+                                 alt="{{ user.username }}" class="rounded-circle img-thumbnail" style="width: 150px; height: 150px; object-fit: cover;">
+                        {% endif %}
                         <div class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2" 
                              style="width: 40px; height: 40px; transform: translate(-10px, -10px);">
                             <i class="fas fa-camera"></i>
@@ -80,9 +109,9 @@
                     <p class="text-muted mb-3">Miembro desde {{ user.date_joined|date:"F Y" }}</p>
                     
                     <div class="d-grid gap-2">
-                        <a href="#" class="btn btn-outline-primary">
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
                             <i class="fas fa-edit me-2"></i>Editar perfil
-                        </a>
+                        </button>
                         <a href="{% url 'anime:password_change' %}" class="btn btn-outline-secondary">
                             <i class="fas fa-key me-2"></i>Cambiar contraseña
                         </a>
@@ -96,16 +125,20 @@
                 </div>
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Animes vistos
-                        <span class="badge bg-primary rounded-pill">0</span>
+                        Total de animes
+                        <span class="badge bg-primary rounded-pill">{{ anime_stats.total_anime|default:0 }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        En mi lista
-                        <span class="badge bg-primary rounded-pill">0</span>
+                        Viendo
+                        <span class="badge bg-primary rounded-pill">{{ anime_stats.watching|default:0 }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Comentarios
-                        <span class="badge bg-primary rounded-pill">0</span>
+                        Completados
+                        <span class="badge bg-primary rounded-pill">{{ anime_stats.completed|default:0 }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Por ver
+                        <span class="badge bg-primary rounded-pill">{{ anime_stats.plan_to_watch|default:0 }}</span>
                     </li>
                 </ul>
             </div>
@@ -114,50 +147,149 @@
         <!-- Main Content -->
         <div class="col-md-8">
             <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Información del perfil</h5>
                 </div>
                 <div class="card-body">
-                    <form>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Nombre de usuario</label>
-                                <input type="text" class="form-control" value="{{ user.username }}" disabled>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Correo electrónico</label>
-                                <input type="email" class="form-control" value="{{ user.email|default:'No especificado' }}" disabled>
-                            </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Nombre de usuario</label>
+                            <p>{{ user.username }}</p>
                         </div>
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <label class="form-label">Biografía</label>
-                                <textarea class="form-control" rows="4" placeholder="Cuéntanos sobre ti..." disabled></textarea>
-                            </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Correo electrónico</label>
+                            <p>{{ user.email|default:'No especificado' }}</p>
                         </div>
-                        <div class="text-end">
-                            <button type="button" class="btn btn-primary">Guardar cambios</button>
+                    </div>
+                    {% if user.profile and user.profile.bio %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Biografía</label>
+                            <p>{{ user.profile.bio|linebreaksbr }}</p>
                         </div>
-                    </form>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             
             <div class="card shadow-sm">
-                <div class="card-header bg-light">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Mi lista de anime</h5>
+                    <a href="{% url 'anime:user_anime_list' %}" class="btn btn-sm btn-outline-primary">Ver todo</a>
                 </div>
                 <div class="card-body">
-                    <div class="text-center py-5">
-                        <i class="fas fa-tv fa-3x text-muted mb-3"></i>
-                        <h5>No has agregado ningún anime a tu lista</h5>
-                        <p class="text-muted">Explora nuestro catálogo y agrega tus animes favoritos</p>
-                        <a href="{% url 'anime:catalog' %}" class="btn btn-primary">
-                            <i class="fas fa-search me-2"></i>Explorar catálogo
-                        </a>
-                    </div>
+                    {% if recent_anime %}
+                        <div class="row g-3">
+                            {% for item in recent_anime %}
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="card h-100 anime-card position-relative">
+                                        {% if item.anime.image %}
+                                            <img src="{{ item.anime.image.url }}" class="card-img-top" alt="{{ item.anime.title }}" style="height: 200px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-secondary" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-image fa-3x text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        <span class="badge bg-primary status-badge">
+                                            {{ item.get_status_display }}
+                                        </span>
+                                        <div class="card-body">
+                                            <h6 class="card-title mb-1">{{ item.anime.title }}</h6>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted">
+                                                    {% if item.score %}
+                                                        {% with ''|center:item.score as range %}
+                                                            {% for _ in range %}<i class="fas fa-star text-warning"></i>{% endfor %}
+                                                        {% endwith %}
+                                                    {% else %}
+                                                        Sin calificar
+                                                    {% endif %}
+                                                </small>
+                                                <small class="text-muted">
+                                                    {{ item.progress }}/{{ item.anime.episode_count|default:'?' }} episodios
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-transparent border-top-0">
+                                            <a href="{{ item.anime.get_absolute_url }}" class="btn btn-sm btn-outline-primary w-100">
+                                                Ver detalles
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-tv fa-3x text-muted mb-3"></i>
+                            <h5>No has agregado ningún anime a tu lista</h5>
+                            <p class="text-muted">Explora nuestro catálogo y agrega tus animes favoritos</p>
+                            <a href="{% url 'anime:catalog' %}" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>Explorar catálogo
+                            </a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Modal para editar perfil -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProfileModalLabel">Editar perfil</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'anime:profile' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">Nombre de usuario</label>
+                        <input type="text" class="form-control" id="id_username" value="{{ user.username }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_email" class="form-label">Correo electrónico</label>
+                        <input type="email" class="form-control" id="id_email" name="email" value="{{ user.email|default:'' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_bio" class="form-label">Biografía</label>
+                        <textarea class="form-control" id="id_bio" name="bio" rows="3">{{ user.profile.bio|default:'' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_avatar" class="form-label">Avatar</label>
+                        <input class="form-control" type="file" id="id_avatar" name="avatar" accept="image/*">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Script para manejar la previsualización de la imagen de perfil
+const avatarInput = document.getElementById('id_avatar');
+const avatarImg = document.querySelector('.img-thumbnail');
+
+if (avatarInput) {
+    avatarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                avatarImg.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+}
+</script>
 {% endblock %}

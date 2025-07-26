@@ -8,13 +8,14 @@ from django.urls import reverse_lazy
 from django.http import JsonResponse
 from django.db import models
 from django.db.models import Q, Count, Case, When, IntegerField
-from .models import Anime, Genre, UserAnimeList
+from .models import Anime, Genre, UserAnimeList, UserProfile
 from .forms import AnimeFilterForm
 import json
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from functools import wraps
 from django.utils import timezone
+from django.contrib import messages
 
 def require_ajax(view_func):
     @wraps(view_func)
@@ -215,27 +216,57 @@ class FavoritesView(LoginRequiredMixin, ListView):
 class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'profile.html'
     
+    def get_profile(self, user):
+        """Get or create user profile"""
+        profile, created = UserProfile.objects.get_or_create(user=user)
+        return profile
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
+        profile = self.get_profile(user)
         
         # Get user's anime list stats
         anime_stats = UserAnimeList.objects.filter(user=user).aggregate(
             total_anime=Count('id', distinct=True),
-            completed=Count(Case(When(status='completed', then=1), output_field=IntegerField())),
-            watching=Count(Case(When(status='watching', then=1), output_field=IntegerField())),
-            plan_to_watch=Count(Case(When(status='plan_to_watch', then=1), output_field=IntegerField())),
-            on_hold=Count(Case(When(status='on_hold', then=1), output_field=IntegerField())),
-            dropped=Count(Case(When(status='dropped', then=1), output_field=IntegerField()))
+            completed=Count(Case(When(status='finalizado', then=1), output_field=IntegerField())),
+            watching=Count(Case(When(status='viendo', then=1), output_field=IntegerField())),
+            on_hold=Count(Case(When(status='en_pausa', then=1), output_field=IntegerField())),
+            dropped=Count(Case(When(status='abandonado', then=1), output_field=IntegerField())),
+            plan_to_watch=Count(Case(When(status='por_ver', then=1), output_field=IntegerField()))
         )
         
         context.update({
             'user': user,
+            'profile': profile,
             'anime_stats': anime_stats,
-            'recent_anime': UserAnimeList.objects.filter(user=user).select_related('anime').order_by('-updated_at')[:5]
+            'recent_anime': UserAnimeList.objects.filter(user=user).select_related('anime').order_by('-updated_at')[:6]
         })
-        
         return context
+    
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        profile = self.get_profile(user)
+        
+        # Update user email if provided
+        new_email = request.POST.get('email')
+        if new_email and new_email != user.email:
+            user.email = new_email
+            user.save()
+        
+        # Update profile bio if provided
+        new_bio = request.POST.get('bio', '').strip()
+        if new_bio != profile.bio:
+            profile.bio = new_bio
+        
+        # Handle avatar upload
+        if 'avatar' in request.FILES:
+            profile.avatar = request.FILES['avatar']
+        
+        profile.save()
+        
+        messages.success(request, 'Perfil actualizado correctamente.')
+        return redirect('anime:profile')
 
 class RegisterView(CreateView):
     form_class = UserCreationForm
