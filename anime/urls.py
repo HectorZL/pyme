@@ -32,6 +32,10 @@ urlpatterns = [
     
     # Comments
     path('anime/<slug:anime_slug>/comment/', views.submit_comment, name='submit_comment'),
+    path('comments/', views.AnimeCommentsView.as_view(), name='comments'),
+    
+    # Forums
+    path('foros/', TemplateView.as_view(template_name='anime/foros.html'), name='foros'),
     
     path('password_change/', auth_views.PasswordChangeView.as_view(
         template_name='registration/password_change.html',

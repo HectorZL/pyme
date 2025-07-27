@@ -145,9 +145,10 @@
 
                 <div class="d-flex align-items-center">
                     <!-- Search Bar -->
-                    <form class="d-flex me-3" role="search">
+                    <form class="d-flex me-3" role="search" action="{% url 'anime:catalog' %}" method="get">
                         <div class="input-group">
-                            <input class="form-control" type="search" placeholder="Buscar anime..." aria-label="Search" style="background-color: #333; color: white; border: 1px solid #FF8C00;">
+                            <input class="form-control" type="search" name="q" placeholder="Buscar anime..." aria-label="Search" 
+                                   value="{{ request.GET.q }}" style="background-color: #333; color: white; border: 1px solid #FF8C00;">
                             <button class="btn" type="submit" style="background-color: #FF8C00; color: white; border: 1px solid #FF8C00;">
                                 <i class="fas fa-search"></i>
                             </button>
@@ -165,7 +166,8 @@
                             <li><a class="dropdown-item" href="{% url 'anime:profile' %}" style="color: white;"><i class="fas fa-user me-2"></i>Mi Perfil</a></li>
                             <li><a class="dropdown-item" href="{% url 'anime:user_anime_list' %}" style="color: white;"><i class="fas fa-tv me-2"></i>Mi Lista de Anime</a></li>
                             <li><a class="dropdown-item" href="{% url 'anime:favorites' %}" style="color: white;"><i class="fas fa-heart me-2"></i>Favoritos</a></li>
-                            <li><a class="dropdown-item" href="#" style="color: white;"><i class="fas fa-comment me-2"></i>Mis Comentarios</a></li>
+                            <li><a class="dropdown-item" href="{% url 'anime:comments' %}" style="color: white;"><i class="fas fa-comment me-2"></i>Comentarios Recientes</a></li>
+                            <li><a class="dropdown-item" href="{% url 'anime:foros' %}" style="color: white;"><i class="fas fa-comments me-2"></i>Foros</a></li>
                             <li><hr class="dropdown-divider" style="border-color: #555;"></li>
                             <li>
                                 <form id="logout-form" method="post" action="{% url 'anime:logout' %}" class="d-inline">

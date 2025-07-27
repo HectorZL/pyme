@@ -197,6 +197,27 @@ class AnimeDetailView(DetailView):
         
         return context
 
+class AnimeCommentsView(LoginRequiredMixin, ListView):
+    """View for displaying anime with their comments"""
+    template_name = 'anime/comments.html'
+    context_object_name = 'animes'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        # Get all animes that have comments, ordered by most recently commented
+        return Anime.objects.filter(
+            comments__isnull=False
+        ).annotate(
+            last_comment_date=models.Max('comments__created_at')
+        ).order_by('-last_comment_date').distinct()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add the last 3 comments for each anime to the context
+        for anime in context['animes']:
+            anime.recent_comments = anime.comments.select_related('user').order_by('-created_at')[:3]
+        return context
+
 class UserAnimeListView(LoginRequiredMixin, ListView):
     model = UserAnimeList
     template_name = 'anime/my_list.html'

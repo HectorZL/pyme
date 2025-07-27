@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Comentarios Recientes - PYCTEM.ANIME{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4"><i class="fas fa-comments me-2"></i>Comentarios Recientes</h1>
+    
+    {% if animes %}
+        {% for anime in animes %}
+            <div class="card mb-4">
+                <div class="row g-0">
+                    <div class="col-md-2">
+                        <a href="{{ anime.get_absolute_url }}">
+                            {% if anime.image %}
+                                <img src="{{ anime.image.url }}" class="img-fluid rounded-start" alt="{{ anime.title }}" style="width: 100%; height: 200px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-secondary d-flex align-items-center justify-content-center" style="width: 100%; height: 200px;">
+                                    <i class="fas fa-image fa-3x text-light"></i>
+                                </div>
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-10">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a href="{{ anime.get_absolute_url }}" class="text-decoration-none text-white">
+                                    {{ anime.title }}
+                                </a>
+                                <span class="badge bg-orange ms-2">{{ anime.comments.count }} comentarios</span>
+                            </h5>
+                            
+                            <div class="comments-section mt-3">
+                                {% for comment in anime.recent_comments %}
+                                    <div class="card bg-dark mb-2">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div class="d-flex align-items-center">
+                                                    {% if comment.user.profile.avatar %}
+                                                        <img src="{{ comment.user.profile.avatar.url }}" 
+                                                             class="rounded-circle me-2" 
+                                                             width="32" 
+                                                             height="32" 
+                                                             alt="{{ comment.user.username }}">
+                                                    {% else %}
+                                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2" 
+                                                             style="width: 32px; height: 32px;">
+                                                            <i class="fas fa-user text-light"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <strong>{{ comment.user.username }}</strong>
+                                                        <small class="text-muted ms-2">
+                                                            {{ comment.created_at|timesince }} atrás
+                                                            {% if comment.is_edited %}
+                                                                <span class="text-muted">(editado)</span>
+                                                            {% endif %}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                {% if comment.is_spoiler %}
+                                                    <span class="badge bg-danger">Spoiler</span>
+                                                {% endif %}
+                                            </div>
+                                            <p class="card-text mb-0">{{ comment.content|truncatewords:50 }}</p>
+                                            <div class="mt-2 d-flex">
+                                                <button class="btn btn-sm btn-outline-secondary me-2" 
+                                                        onclick="toggleLike({{ comment.id }})">
+                                                    <i class="far fa-thumbs-up"></i> 
+                                                    <span id="like-count-{{ comment.id }}">{{ comment.get_like_count }}</span>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary me-2" 
+                                                        onclick="toggleDislike({{ comment.id }})">
+                                                    <i class="far fa-thumbs-down"></i> 
+                                                    <span id="dislike-count-{{ comment.id }}">{{ comment.get_dislike_count }}</span>
+                                                </button>
+                                                <a href="{{ anime.get_absolute_url }}#comment-{{ comment.id }}" 
+                                                   class="btn btn-sm btn-outline-secondary ms-auto">
+                                                    Ver más <i class="fas fa-arrow-right ms-1"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                                
+                                {% if anime.comments.count > 3 %}
+                                    <div class="text-end mt-2">
+                                        <a href="{{ anime.get_absolute_url }}#comments" class="btn btn-sm btn-outline-orange">
+                                            Ver todos los comentarios ({{ anime.comments.count }})
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+        
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Aún no hay comentarios. ¡Sé el primero en comentar en algún anime!
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Function to handle like button click
+    function toggleLike(commentId) {
+        fetch(`/anime/comments/${commentId}/like/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFTTOKEN': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById(`like-count-${commentId}`).textContent = data.likes;
+                document.getElementById(`dislike-count-${commentId}`).textContent = data.dislikes;
+            }
+        });
+    }
+    
+    // Function to handle dislike button click
+    function toggleDislike(commentId) {
+        fetch(`/anime/comments/${commentId}/dislike/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFTTOKEN': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById(`like-count-${commentId}`).textContent = data.likes;
+                document.getElementById(`dislike-count-${commentId}`).textContent = data.dislikes;
+            }
+        });
+    }
+</script>
+{% endblock %}

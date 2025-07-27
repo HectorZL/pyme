@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Foros - PYCTEM.ANIME{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h1 class="h4 mb-0"><i class="fas fa-comments me-2"></i>Foros</h1>
+                </div>
+                <div class="card-body text-center py-5">
+                    <div class="display-1 text-muted mb-4">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <h2 class="h3 mb-3">¡Próximamente!</h2>
+                    <p class="lead text-muted mb-4">Estamos trabajando en los foros. ¡Vuelve pronto para participar en las discusiones de la comunidad!</p>
+                    <a href="{% url 'anime:home' %}" class="btn btn-orange">
+                        <i class="fas fa-home me-2"></i>Volver al inicio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
