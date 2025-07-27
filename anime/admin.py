@@ -30,7 +30,7 @@ class AnimeAdmin(admin.ModelAdmin):
             'fields': ('title', 'slug', 'description', 'anime_type', 'status')
         }),
         ('Detalles', {
-            'fields': ('episodes', 'duration', 'rating', 'year', 'season', 'studio', 'genres')
+            'fields': ('episode_count', 'duration', 'rating', 'year', 'season', 'studio', 'genres')
         }),
         ('Multimedia', {
             'fields': ('image', 'cover_image', 'trailer_url')

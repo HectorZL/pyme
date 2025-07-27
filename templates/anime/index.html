@@ -4,28 +4,209 @@
 {% block title %}el pyme anime - Inicio{% endblock %}
 
 {% block extra_css %}
+{{ block.super }}
 <link rel="stylesheet" href="{% static 'css/components/catalog.css' %}?v=1.0.1">
 <link rel="stylesheet" href="{% static 'css/components/buttons.css' %}?v=1.0.1">
 <link rel="stylesheet" href="{% static 'css/components/global.css' %}?v=1.0.1">
+<style>
+    .anime-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1.5rem;
+        padding: 1rem 0;
+    }
+    
+    .anime-card {
+        background: #1a1a1a;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+    }
+    
+    .anime-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .anime-cover {
+        position: relative;
+        padding-top: 140%;
+        overflow: hidden;
+    }
+    
+    .anime-cover img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+    }
+    
+    .anime-card:hover .anime-cover img {
+        transform: scale(1.05);
+    }
+    
+    .anime-info {
+        padding: 0.75rem;
+    }
+    
+    .anime-title {
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .anime-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        color: #aaa;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 2rem 0 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #333;
+        display: inline-block;
+    }
+    
+    .section-title i {
+        margin-right: 0.5rem;
+        color: #ff8c00;
+    }
+    
+    @media (max-width: 768px) {
+        .anime-grid {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+        
+        .anime-title {
+            font-size: 0.85rem;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            margin: 1.5rem 0 0.75rem;
+        }
+    }
+</style>
 {% endblock %}
 
-{% block content %}
-<!-- Hero Section -->
-<section class="hero">
-    <div class="hero-particles" id="particles-js"></div>
-    <div class="container">
-        <div class="hero-content">
+{% block hero_carousel %}
+<div class="hero-carousel">
+    <!-- Slides personalizados para la página de inicio -->
+    <div class="carousel-slide active" style="background-image: url('https://source.unsplash.com/random/1920x1080?anime,1');">
+        <div class="container h-100 d-flex align-items-center">
             <div class="hero-text">
-                <span class="hero-subtitle">Bienvenido a</span>
-                <h1 class="hero-title">el pyme <span class="text-primary">anime</span></h1>
-                <p class="hero-description">Tu plataforma favorita para descubrir y disfrutar de los mejores animes en línea. Series clásicas, estrenos y mucho más en un solo lugar.</p>
-                <div class="hero-cta">
-                    <a href="{% url 'anime:catalog' %}" class="btn btn-primary btn-lg btn-explore">
-                        <i class="fas fa-play-circle me-2"></i> Explorar Catálogo
-                    </a>
-                </div>
+                <h1>Bienvenido a PYCTEM.ANIME</h1>
+                <p>Descubre las mejores series de anime en un solo lugar.</p>
             </div>
         </div>
     </div>
-</section>
+    <div class="carousel-slide" style="background-image: url('https://source.unsplash.com/random/1920x1080?anime,2');">
+        <div class="container h-100 d-flex align-items-center">
+            <div class="hero-text">
+                <h1>Explora Nuestro Catálogo</h1>
+                <p>Encuentra tus animes favoritos y descubre nuevos títulos.</p>
+            </div>
+        </div>
+    </div>
+    <div class="carousel-slide" style="background-image: url('https://source.unsplash.com/random/1920x1080?anime,3');">
+        <div class="container h-100 d-flex align-items-center">
+            <div class="hero-text">
+                <h1>Crea Tu Lista Personal</h1>
+                <p>Guarda tus animes favoritos y sigue tu progreso.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Últimos lanzamientos -->
+    <h2 class="section-title"><i class="fas fa-fire"></i>Últimos Lanzamientos</h2>
+    <div class="anime-grid">
+        {% for anime in latest_animes %}
+        <div class="anime-card">
+            <a href="{% url 'anime:anime_detail' anime.slug %}">
+                <div class="anime-cover">
+                    <img src="{{ anime.cover_image.url }}" alt="{{ anime.title }}" loading="lazy">
+                </div>
+                <div class="anime-info">
+                    <h3 class="anime-title">{{ anime.title }}</h3>
+                    <div class="anime-meta">
+                        <span>{{ anime.episode_count }} episodios</span>
+                        <span><i class="fas fa-star"></i> {{ anime.average_rating|floatformat:1|default:"N/A" }}</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <p>No hay animes disponibles actualmente.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Mejor valorados -->
+    <h2 class="section-title"><i class="fas fa-star"></i>Mejor Valorados</h2>
+    <div class="anime-grid">
+        {% for anime in top_rated %}
+        <div class="anime-card">
+            <a href="{% url 'anime:anime_detail' anime.slug %}">
+                <div class="anime-cover">
+                    <img src="{{ anime.cover_image.url }}" alt="{{ anime.title }}" loading="lazy">
+                </div>
+                <div class="anime-info">
+                    <h3 class="anime-title">{{ anime.title }}</h3>
+                    <div class="anime-meta">
+                        <span>{{ anime.episode_count }} episodios</span>
+                        <span><i class="fas fa-star"></i> {{ anime.average_rating|floatformat:1|default:"N/A" }}</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <p>No hay animes disponibles actualmente.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    // Scripts específicos para la página de inicio
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicialización de tooltips de Bootstrap
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // Efecto hover en las tarjetas de anime
+        const animeCards = document.querySelectorAll('.anime-card');
+        animeCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+                this.style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.3)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = '';
+                this.style.boxShadow = '';
+            });
+        });
+    });
+</script>
 {% endblock %}

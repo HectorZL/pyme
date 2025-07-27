@@ -32,6 +32,16 @@ def require_ajax(view_func):
 
 class HomeView(TemplateView):
     template_name = 'anime/index.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get latest 12 animes ordered by creation date
+        context['latest_animes'] = Anime.objects.order_by('-created_at')[:12]
+        # Get top rated animes with rating >= 7, ordered by average_rating
+        context['top_rated'] = Anime.objects.filter(
+            average_rating__gte=7.0
+        ).order_by('-average_rating')[:12]
+        return context
 
 class AnimeCatalogView(ListView):
     model = Anime
