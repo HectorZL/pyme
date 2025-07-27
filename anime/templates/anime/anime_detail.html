@@ -72,40 +72,20 @@
                                     <i class="fas fa-heart"></i>
                                 </button>
                             </div>
-                            
-                            <!-- Moved progress tracker here -->
-                            {% if user_status %}
-                            <div class="progress-tracker mb-3">
-                                <div class="d-flex justify-content-between mb-1">
-                                    <small>Progreso: {{ user_progress }} / {{ anime.episode_count|default:'?' }}</small>
-                                    <small><span class="text-muted">Puntuación:</span> 
-                                        <span class="fw-bold">{{ user_score|default:'-' }}/10</span>
-                                    </small>
-                                </div>
-                                <div class="progress" style="height: 5px;">
-                                    <div class="progress-bar" role="progressbar" 
-                                         style="width: {% widthratio user_progress anime.episode_count|default:1 100 %}%" 
-                                         aria-valuenow="{{ user_progress }}" 
-                                         aria-valuemin="0" 
-                                         aria-valuemax="{{ anime.episode_count|default:1 }}">
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
                         {% endif %}
                         
                         <div class="rating mb-3">
                             <div class="d-flex align-items-center">
                                 <div class="rating-stars me-2" id="rating-stars">
-                                    {% for i in "12345678910" %}
-                                        <i class="fas fa-star {% if user_rating and forloop.counter <= user_rating %}text-warning{% elif forloop.counter <= avg_rating|floatformat:0 %}text-warning{% else %}text-secondary{% endif %}" 
-                                           data-rating="{{ forloop.counter }}" 
-                                           style="cursor: pointer;"
-                                           title="{{ forloop.counter }} de 10"></i>
-                                    {% endfor %}
+                                {% for i in "1234567890"|make_list %}
+                                    <i class="fas fa-star {% if user_rating and forloop.counter <= user_rating %}text-warning{% elif forloop.counter <= avg_rating|floatformat:0|add:0 %}text-warning{% else %}text-secondary{% endif %}" 
+                                       data-rating="{{ forloop.counter }}" 
+                                       style="cursor: pointer;"
+                                       title="{{ forloop.counter }} de 10"></i>
+                                {% endfor %}
                                 </div>
                                 <span class="fw-bold me-2" id="average-rating">{{ avg_rating|default:'0' }}/10</span>
-                                <small class="text-muted">(<span id="rating-count">{{ rating_count }}</span> votos)</small>
+                                <small class="text-muted">(<span id="rating-count">{{ rating_count }}</span> voto{{ rating_count|pluralize:"s" }})</small>
                             </div>
                         </div>
                         
@@ -493,7 +473,9 @@ function updateProgressTracker(totalEpisodes, watchedEpisodes) {
                 <div class="progress-tracker mt-3">
                     <div class="d-flex justify-content-between mb-1">
                         <small>Progreso: ${watchedEpisodes} / ${totalEpisodes}</small>
-                        <small><span class="text-muted">Puntuación:</span> <span class="fw-bold">-</span></small>
+                        <small><span class="text-muted">Puntuación:</span> 
+                            <span class="fw-bold">{{ user_score|default:'-' }}/10</span>
+                        </small>
                     </div>
                     <div class="progress" style="height: 5px;">
                         <div class="progress-bar" role="progressbar" 
