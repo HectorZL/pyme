@@ -85,6 +85,27 @@
         color: #ff8c00;
     }
     
+    .rating-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: #333;
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 0.8rem;
+    }
+    
+    .no-image {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2rem;
+        font-weight: bold;
+        color: #fff;
+    }
+    
     @media (max-width: 768px) {
         .anime-grid {
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -142,13 +163,22 @@
         <div class="anime-card">
             <a href="{% url 'anime:anime_detail' anime.slug %}">
                 <div class="anime-cover">
-                    <img src="{{ anime.cover_image.url }}" alt="{{ anime.title }}" loading="lazy">
+                    {% if anime.cover_image %}
+                        <img src="{{ anime.cover_image.url }}" alt="{{ anime.title }}" loading="lazy">
+                    {% else %}
+                        <div class="no-image">{{ anime.title|slice:":2" }}</div>
+                    {% endif %}
+                    {% if anime.rating %}
+                    <div class="rating-badge">
+                        <i class="fas fa-star"></i> {{ anime.rating|floatformat:1 }}
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="anime-info">
                     <h3 class="anime-title">{{ anime.title }}</h3>
                     <div class="anime-meta">
+                        <span>{{ anime.year }}</span>
                         <span>{{ anime.episode_count }} episodios</span>
-                        <span><i class="fas fa-star"></i> {{ anime.average_rating|floatformat:1|default:"N/A" }}</span>
                     </div>
                 </div>
             </a>
@@ -165,13 +195,22 @@
         <div class="anime-card">
             <a href="{% url 'anime:anime_detail' anime.slug %}">
                 <div class="anime-cover">
-                    <img src="{{ anime.cover_image.url }}" alt="{{ anime.title }}" loading="lazy">
+                    {% if anime.cover_image %}
+                        <img src="{{ anime.cover_image.url }}" alt="{{ anime.title }}" loading="lazy">
+                    {% else %}
+                        <div class="no-image">{{ anime.title|slice:":2" }}</div>
+                    {% endif %}
+                    {% if anime.rating %}
+                    <div class="rating-badge">
+                        <i class="fas fa-star"></i> {{ anime.rating|floatformat:1 }}
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="anime-info">
                     <h3 class="anime-title">{{ anime.title }}</h3>
                     <div class="anime-meta">
+                        <span>{{ anime.year }}</span>
                         <span>{{ anime.episode_count }} episodios</span>
-                        <span><i class="fas fa-star"></i> {{ anime.average_rating|floatformat:1|default:"N/A" }}</span>
                     </div>
                 </div>
             </a>

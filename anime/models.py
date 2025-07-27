@@ -49,14 +49,14 @@ class Anime(models.Model):
     anime_type = models.CharField('Tipo', max_length=10, choices=TYPE_CHOICES, default='tv')
     episode_count = models.PositiveIntegerField('Número de episodios', default=0)  
     duration = models.PositiveIntegerField('Duración por episodio (minutos)', default=24)
-    rating = models.FloatField('Puntuación', default=0.0)
+    rating = models.DecimalField('Puntuación', max_digits=3, decimal_places=1, default=0.0)
+    average_rating = models.DecimalField('Puntuación media', max_digits=3, decimal_places=1, default=0.0)
     genres = models.ManyToManyField(Genre, related_name='animes', verbose_name='Géneros')
     year = models.PositiveIntegerField('Año de estreno', null=True, blank=True)
     season = models.CharField('Temporada', max_length=20, blank=True, null=True)
     studio = models.CharField('Estudio', max_length=100, blank=True, null=True)
     created_at = models.DateTimeField('Fecha de creación', auto_now_add=True)
     updated_at = models.DateTimeField('Última actualización', auto_now=True)
-    average_rating = models.FloatField('Puntuación media', default=0.0)
     
     def __str__(self):
         return self.title
@@ -258,7 +258,7 @@ class Rating(models.Model):
     """Model for user ratings of anime"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='anime_ratings')
     anime = models.ForeignKey(Anime, on_delete=models.CASCADE, related_name='ratings')
-    score = models.PositiveSmallIntegerField('Puntuación', choices=[(i, str(i)) for i in range(1, 6)])  # 1-5 stars
+    score = models.DecimalField('Puntuación', max_digits=3, decimal_places=1, choices=[(i, str(i)) for i in [x/10 for x in range(0, 51)]])  # 0.0-5.0 stars
     created_at = models.DateTimeField('Fecha de creación', auto_now_add=True)
     updated_at = models.DateTimeField('Última actualización', auto_now=True)
 

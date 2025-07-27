@@ -35,12 +35,25 @@ class HomeView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Get latest 12 animes ordered by creation date
-        context['latest_animes'] = Anime.objects.order_by('-created_at')[:12]
-        # Get top rated animes with rating >= 7, ordered by average_rating
+        
+        # Get latest animes (most recently added to the database)
+        context['latest_animes'] = Anime.objects.filter(
+            year__isnull=False
+        ).order_by('-created_at')[:12]
+        
+        # Get top rated animes (with rating >= 6.0, ordered by rating)
         context['top_rated'] = Anime.objects.filter(
-            average_rating__gte=7.0
-        ).order_by('-average_rating')[:12]
+            rating__gte=6.0
+        ).order_by('-rating', '-year')[:12]
+        
+        # If we don't have enough top rated animes, fill with highest rated
+        if len(context['top_rated']) < 12:
+            top_rated_ids = [anime.id for anime in context['top_rated']]
+            additional = Anime.objects.exclude(id__in=top_rated_ids)\
+                                   .order_by('-rating', '-year')\
+                                   [:12 - len(context['top_rated'])]
+            context['top_rated'] = list(context['top_rated']) + list(additional)
+            
         return context
 
 class AnimeCatalogView(ListView):
