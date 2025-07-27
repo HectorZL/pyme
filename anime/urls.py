@@ -3,6 +3,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView
 from . import views
+from .views import rate_anime
 
 app_name = 'anime'
 
@@ -55,4 +56,5 @@ urlpatterns = [
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(
         template_name='registration/password_reset_complete.html'
     ), name='password_reset_complete'),
+    path('anime/<int:pk>/rate/', rate_anime, name='rate_anime'),
 ]

@@ -6,6 +6,52 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/catalog.css' %}">
 <link rel="stylesheet" href="{% static 'css/components/global.css' %}">
+<style>
+    /* Estilos mejorados para botones activos */
+    .filter-btn.active {
+        background-color: #4a90e2;
+        color: white;
+        font-weight: 600;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filter-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filter-btn {
+        transition: all 0.2s ease-in-out;
+    }
+    
+    /* Estilos para el menú de ordenación */
+    .sort-options {
+        margin: 20px 0;
+        text-align: right;
+    }
+    
+    .sort-select {
+        padding: 8px 16px;
+        border-radius: 20px;
+        border: 1px solid #ddd;
+        background-color: white;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .sort-select:hover {
+        border-color: #4a90e2;
+        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+    }
+    
+    .sort-select:focus {
+        outline: none;
+        border-color: #4a90e2;
+        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -23,39 +69,48 @@
         <div class="filter-group">
             <h3>Géneros</h3>
             <div class="filter-options">
-                <button class="filter-btn active">Todos</button>
-                <button class="filter-btn">Acción</button>
-                <button class="filter-btn">Aventura</button>
-                <button class="filter-btn">Comedia</button>
-                <button class="filter-btn">Drama</button>
-                <button class="filter-btn">Fantasía</button>
-                <button class="filter-btn">Misterio</button>
-                <button class="filter-btn">Romance</button>
-                <button class="filter-btn">Ciencia Ficción</button>
+                <a href="?{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_year %}&year={{ current_year }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" 
+                   class="filter-btn {% if not current_genre %}active{% endif %}">
+                    Todos
+                </a>
+                {% for genre in all_genres %}
+                    <a href="?genre={{ genre.slug }}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_year %}&year={{ current_year }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" 
+                       class="filter-btn {% if current_genre == genre.slug %}active{% endif %}">
+                        {{ genre.name }}
+                    </a>
+                {% endfor %}
             </div>
         </div>
 
         <div class="filter-group">
             <h3>Año</h3>
             <div class="filter-options">
-                <button class="filter-btn active">Todos</button>
-                <button class="filter-btn">2024</button>
-                <button class="filter-btn">2023</button>
-                <button class="filter-btn">2022</button>
-                <button class="filter-btn">2021-2010</button>
-                <button class="filter-btn">2009-2000</button>
-                <button class="filter-btn">90s</button>
-                <button class="filter-btn">80s</button>
+                <a href="?{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_genre %}&genre={{ current_genre }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" 
+                   class="filter-btn {% if not current_year %}active{% endif %}">
+                    Todos
+                </a>
+                {% for year in all_years %}
+                    <a href="?year={{ year }}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_genre %}&genre={{ current_genre }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" 
+                       class="filter-btn {% if current_year|stringformat:'s' == year|stringformat:'s' %}active{% endif %}">
+                        {{ year }}
+                    </a>
+                {% endfor %}
             </div>
         </div>
 
         <div class="filter-group">
             <h3>Estado</h3>
             <div class="filter-options">
-                <button class="filter-btn active">Todos</button>
-                <button class="filter-btn">En Emisión</button>
-                <button class="filter-btn">Finalizado</button>
-                <button class="filter-btn">Próximamente</button>
+                <a href="?{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_genre %}&genre={{ current_genre }}{% endif %}{% if current_year %}&year={{ current_year }}{% endif %}" 
+                   class="filter-btn {% if not current_status %}active{% endif %}">
+                    Todos
+                </a>
+                {% for value, label in status_choices %}
+                    <a href="?status={{ value }}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_genre %}&genre={{ current_genre }}{% endif %}{% if current_year %}&year={{ current_year }}{% endif %}" 
+                       class="filter-btn {% if current_status == value %}active{% endif %}">
+                        {{ label }}
+                    </a>
+                {% endfor %}
             </div>
         </div>
     </div>
@@ -63,10 +118,12 @@
     <!-- Sort Options -->
     <div class="sort-options">
         <select class="sort-select">
-            <option value="popular">Más Populares</option>
-            <option value="newest">Más Recientes</option>
-            <option value="rating">Mejor Valorados</option>
-            <option value="title">Título (A-Z)</option>
+            <option value="-rating" {% if current_sort == '-rating' %}selected{% endif %}>Mejor Valorados</option>
+            <option value="-created_at" {% if current_sort == '-created_at' or not current_sort %}selected{% endif %}>Más Recientes</option>
+            <option value="title" {% if current_sort == 'title' %}selected{% endif %}>Título (A-Z)</option>
+            <option value="-title" {% if current_sort == '-title' %}selected{% endif %}>Título (Z-A)</option>
+            <option value="-year" {% if current_sort == '-year' %}selected{% endif %}>Año (nuevo a viejo)</option>
+            <option value="year" {% if current_sort == 'year' %}selected{% endif %}>Año (viejo a nuevo)</option>
         </select>
     </div>
 
@@ -118,23 +175,90 @@
 
 {% block extra_js %}
 <script>
-    // Filter functionality
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const parent = this.parentElement;
-            parent.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Here you would typically filter the anime list
-            // For now, we'll just log the filter
-            console.log(`Filtered by: ${this.textContent}`);
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Catalog page loaded');
+        
+        // Handle filter button clicks
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Remove active class from all buttons in the same filter group
+                const filterGroup = this.closest('.filter-group');
+                if (filterGroup) {
+                    filterGroup.querySelectorAll('.filter-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                }
+                
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                // If it's a link, let it proceed
+                if (this.getAttribute('href')) {
+                    return true;
+                }
+                
+                e.preventDefault();
+                return false;
+            });
         });
-    });
 
-    // Sort functionality
-    document.querySelector('.sort-select').addEventListener('change', function() {
-        console.log(`Sorted by: ${this.value}`);
-        // Here you would typically sort the anime list
+        // Handle sort select change
+        const sortSelect = document.querySelector('.sort-select');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', function() {
+                const url = new URL(window.location.href);
+                const params = new URLSearchParams(url.search);
+                
+                // Update or add sort parameter
+                if (this.value) {
+                    params.set('sort', this.value);
+                } else {
+                    params.delete('sort');
+                }
+                
+                // Update URL and reload
+                url.search = params.toString();
+                window.location.href = url.toString();
+            });
+        }
+        
+        // Initialize active states based on current URL parameters
+        function initializeActiveStates() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentSort = urlParams.get('sort');
+            const currentGenre = urlParams.get('genre');
+            const currentYear = urlParams.get('year');
+            const currentStatus = urlParams.get('status');
+            
+            // Set active state for sort select
+            if (sortSelect && currentSort) {
+                sortSelect.value = currentSort;
+            }
+            
+            // Set active state for filter buttons
+            document.querySelectorAll('.filter-btn').forEach(button => {
+                const href = button.getAttribute('href');
+                if (!href) return;
+                
+                const url = new URL(href, window.location.origin);
+                const btnParams = new URLSearchParams(url.search);
+                
+                // Check if this button matches the current filter state
+                const btnGenre = btnParams.get('genre');
+                const btnYear = btnParams.get('year');
+                const btnStatus = btnParams.get('status');
+                
+                if ((!currentGenre && !btnGenre && !btnYear && !btnStatus) || // 'All' button
+                    (currentGenre && currentGenre === btnGenre) ||
+                    (currentYear && currentYear === btnYear) ||
+                    (currentStatus && currentStatus === btnStatus)) {
+                    button.classList.add('active');
+                }
+            });
+        }
+        
+        // Initialize the page
+        initializeActiveStates();
     });
 </script>
 {% endblock %}

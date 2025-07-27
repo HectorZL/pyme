@@ -258,7 +258,7 @@ class Rating(models.Model):
     """Model for user ratings of anime"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='anime_ratings')
     anime = models.ForeignKey(Anime, on_delete=models.CASCADE, related_name='ratings')
-    score = models.DecimalField('Puntuación', max_digits=3, decimal_places=1, choices=[(i, str(i)) for i in [x/10 for x in range(0, 51)]])  # 0.0-5.0 stars
+    score = models.PositiveSmallIntegerField('Puntuación', choices=[(i, str(i)) for i in range(1, 11)])  # 1-10 scale
     created_at = models.DateTimeField('Fecha de creación', auto_now_add=True)
     updated_at = models.DateTimeField('Última actualización', auto_now=True)
 
@@ -268,7 +268,7 @@ class Rating(models.Model):
         verbose_name_plural = 'Valoraciones'
     
     def __str__(self):
-        return f"{self.user.username} - {self.anime.title}: {self.score} estrellas"
+        return f"{self.user.username} - {self.anime.title}: {self.score}/10"
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

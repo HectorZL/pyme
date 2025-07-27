@@ -8,7 +8,7 @@ from django.urls import reverse_lazy
 from django.http import JsonResponse
 from django.db import models
 from django.db.models import Q, Count, Case, When, IntegerField
-from .models import Anime, Genre, UserAnimeList, UserProfile, Comment
+from .models import Anime, Genre, UserAnimeList, UserProfile, Comment, Rating
 from .forms import AnimeFilterForm
 import json
 from django.views.decorators.http import require_http_methods
@@ -74,12 +74,25 @@ class AnimeCatalogView(ListView):
                 Q(genres__name__icontains=search_query)
             ).distinct()
         
+        # Apply filters
+        genre_filter = self.request.GET.get('genre')
+        if genre_filter:
+            queryset = queryset.filter(genres__slug=genre_filter)
+            
+        year_filter = self.request.GET.get('year')
+        if year_filter and year_filter.isdigit():
+            queryset = queryset.filter(year=year_filter)
+        
+        status_filter = self.request.GET.get('status')
+        if status_filter in dict(Anime.STATUS_CHOICES):
+            queryset = queryset.filter(status=status_filter)
+        
         # Apply sorting
         sort_by = self.request.GET.get('sort', '-created_at')
         if sort_by in ['title', '-title', 'year', '-year', '-rating', '-created_at']:
             queryset = queryset.order_by(sort_by)
         
-        return queryset
+        return queryset.distinct()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -93,6 +106,20 @@ class AnimeCatalogView(ListView):
         
         # Add current sorting to context
         context['current_sort'] = self.request.GET.get('sort', '-created_at')
+        
+        # Add filter parameters to context
+        context['current_genre'] = self.request.GET.get('genre', '')
+        context['current_year'] = self.request.GET.get('year', '')
+        context['current_status'] = self.request.GET.get('status', '')
+        
+        # Get all genres for the filter
+        context['all_genres'] = Genre.objects.all().order_by('name')
+        
+        # Get distinct years for the filter
+        context['all_years'] = Anime.objects.exclude(year__isnull=True).values_list('year', flat=True).distinct().order_by('-year')
+        
+        # Add status choices
+        context['status_choices'] = Anime.STATUS_CHOICES
         
         # Add user's anime status if authenticated
         if self.request.user.is_authenticated:
@@ -126,6 +153,26 @@ class AnimeDetailView(DetailView):
         # Add episodes if available
         context['episodes'] = anime.episode_list.all().order_by('number')
         
+        # Get rating statistics
+        rating_data = anime.ratings.aggregate(
+            avg_rating=models.Avg('score'),
+            rating_count=models.Count('id')
+        )
+        
+        # Add rating data to context
+        context['avg_rating'] = round(float(rating_data['avg_rating'] or 0), 1)
+        context['rating_count'] = rating_data['rating_count'] or 0
+        
+        # Add user's rating if authenticated
+        if self.request.user.is_authenticated:
+            try:
+                user_rating = Rating.objects.get(user=self.request.user, anime=anime)
+                context['user_rating'] = user_rating.score
+            except Rating.DoesNotExist:
+                context['user_rating'] = 0
+        else:
+            context['user_rating'] = 0
+            
         # Add user's anime status and other data if authenticated
         if self.request.user.is_authenticated:
             try:
@@ -144,14 +191,6 @@ class AnimeDetailView(DetailView):
                 context['user_progress'] = 0
                 context['user_notes'] = ''
                 context['is_favorite'] = False
-        
-        # Add average rating and rating count
-        rating_data = anime.user_lists.aggregate(
-            avg_rating=models.Avg('score'),
-            rating_count=models.Count('score')
-        )
-        context['avg_rating'] = round(rating_data['avg_rating'] or 0, 1)
-        context['rating_count'] = rating_data['rating_count'] or 0
         
         # Add comments
         context['comments'] = anime.comments.filter(parent__isnull=True).order_by('-created_at')
@@ -789,3 +828,64 @@ def submit_comment(request, anime_slug):
         return JsonResponse({'status': 'error', 'message': 'Datos inválidos'}, status=400)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@require_http_methods(["POST"])
+@login_required
+@require_ajax
+def rate_anime(request, pk):
+    """
+    Handle anime rating submission via AJAX.
+    
+    Expected POST data:
+    - score: Integer between 1 and 10
+    
+    Returns JSON response with status and updated rating info.
+    """
+    try:
+        data = json.loads(request.body)
+        score = int(data.get('score'))
+        
+        # Validate score is between 1 and 10
+        if not (1 <= score <= 10):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'La puntuación debe estar entre 1 y 10.'
+            }, status=400)
+            
+        anime = get_object_or_404(Anime, pk=pk)
+        
+        # Get or create the rating
+        from .models import Rating
+        rating, created = Rating.objects.update_or_create(
+            user=request.user,
+            anime=anime,
+            defaults={'score': score}
+        )
+        
+        # Update anime's average rating
+        anime.update_average_rating()
+        
+        # Get updated rating data
+        rating_data = anime.ratings.aggregate(
+            avg_rating=models.Avg('score'),
+            rating_count=Count('id')
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Valoración guardada correctamente',
+            'avg_rating': round(float(rating_data['avg_rating'] or 0), 1),
+            'rating_count': rating_data['rating_count'] or 0
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Error en el formato de los datos.'
+        }, status=400)
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)

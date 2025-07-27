@@ -96,13 +96,16 @@
                         
                         <div class="rating mb-3">
                             <div class="d-flex align-items-center">
-                                <div class="rating-stars me-2">
-                                    {% for i in "12345" %}
-                                        <i class="fas fa-star {% if forloop.counter <= avg_rating|floatformat:0 %}text-warning{% else %}text-secondary{% endif %}"></i>
+                                <div class="rating-stars me-2" id="rating-stars">
+                                    {% for i in "12345678910" %}
+                                        <i class="fas fa-star {% if user_rating and forloop.counter <= user_rating %}text-warning{% elif forloop.counter <= avg_rating|floatformat:0 %}text-warning{% else %}text-secondary{% endif %}" 
+                                           data-rating="{{ forloop.counter }}" 
+                                           style="cursor: pointer;"
+                                           title="{{ forloop.counter }} de 10"></i>
                                     {% endfor %}
                                 </div>
-                                <span class="fw-bold me-2">{{ avg_rating|default:'-' }}/5</span>
-                                <small class="text-muted">({{ rating_count }} votos)</small>
+                                <span class="fw-bold me-2" id="average-rating">{{ avg_rating|default:'0' }}/10</span>
+                                <small class="text-muted">(<span id="rating-count">{{ rating_count }}</span> votos)</small>
                             </div>
                         </div>
                         
@@ -600,5 +603,86 @@ $(document).ready(function() {
         });
     }
 });
+
+// Handle star rating
+const ratingContainer = document.querySelector('#rating-stars');
+const ratingStars = document.querySelectorAll('#rating-stars .fa-star');
+let userRating = {{ user_rating|default:0 }};
+
+// Highlight stars on hover
+ratingStars.forEach(star => {
+    star.addEventListener('mouseover', function() {
+        const rating = parseInt(this.getAttribute('data-rating'));
+        highlightStars(rating);
+    });
+    
+    star.addEventListener('click', function() {
+        const rating = parseInt(this.getAttribute('data-rating'));
+        submitRating(rating);
+    });
+});
+
+// Reset stars when mouse leaves the rating container
+ratingContainer.addEventListener('mouseleave', function() {
+    highlightStars(userRating || 0);
+});
+
+// Function to highlight stars up to the given rating
+function highlightStars(rating) {
+    ratingStars.forEach(star => {
+        const starRating = parseInt(star.getAttribute('data-rating'));
+        if (starRating <= rating) {
+            star.classList.add('text-warning');
+            star.classList.remove('text-secondary');
+        } else {
+            star.classList.remove('text-warning');
+            star.classList.add('text-secondary');
+        }
+    });
+}
+
+// Function to submit rating to the server
+function submitRating(rating) {
+    const animeId = '{{ anime.id }}';
+    const csrftoken = getCookie('csrftoken');
+    
+    fetch(`/anime/${animeId}/rate/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            'score': rating
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Update the displayed rating
+            document.getElementById('average-rating').textContent = `${data.avg_rating}/10`;
+            document.getElementById('rating-count').textContent = data.rating_count;
+            
+            // Update user's rating
+            userRating = rating;
+            highlightStars(userRating);
+            
+            // Show success message
+            showToast('success', '¡Gracias por tu valoración!');
+        } else {
+            showToast('error', data.message || 'Error al guardar la valoración');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Error de conexión');
+    });
+}
+
+// Initialize stars with user's rating
+if (userRating > 0) {
+    highlightStars(userRating);
+}
 </script>
 {% endblock %}
