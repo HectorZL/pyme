@@ -124,21 +124,6 @@
             </div>
             
             <div class="view-options">
-                <div class="sort-by">
-                    <form method="get" id="sort-form">
-                        <input type="hidden" name="q" value="{{ request.GET.q }}">
-                        <label for="sort" class="form-label">Ordenar por:</label>
-                        <select name="sort" class="form-select" id="sort" onchange="this.form.submit()">
-                            <option value="-created_at" {% if request.GET.sort == '-created_at' %}selected{% endif %}>Más recientes</option>
-                            <option value="title" {% if request.GET.sort == 'title' %}selected{% endif %}>Título (A-Z)</option>
-                            <option value="-title" {% if request.GET.sort == '-title' %}selected{% endif %}>Título (Z-A)</option>
-                            <option value="-rating" {% if request.GET.sort == '-rating' %}selected{% endif %}>Mejor valorados</option>
-                            <option value="-year" {% if request.GET.sort == '-year' %}selected{% endif %}>Año (nuevos primero)</option>
-                            <option value="year" {% if request.GET.sort == 'year' %}selected{% endif %}>Año (antiguos primero)</option>
-                        </select>
-                    </form>
-                </div>
-                
                 <div class="view-toggle">
                     <button class="view-btn {% if not request.GET.view or request.GET.view == 'grid' %}active{% endif %}" 
                             data-view="grid" 
