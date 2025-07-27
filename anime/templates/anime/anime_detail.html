@@ -160,7 +160,7 @@
                         {% else %}
                         <div class="text-center py-3">
                             <p>Inicia sesión para dejar un comentario.</p>
-                            <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">Iniciar sesión</a>
+                            <a href="{% url 'anime:login' %}?next={{ request.path }}" class="btn btn-primary">Iniciar sesión</a>
                         </div>
                         {% endif %}
                         

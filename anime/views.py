@@ -39,7 +39,7 @@ class HomeView(TemplateView):
         # Get latest animes (most recently added to the database)
         context['latest_animes'] = Anime.objects.filter(
             year__isnull=False
-        ).order_by('-created_at')[:12]
+        ).order_by('-year', '-created_at')[:12]
         
         # Get top rated animes (with rating >= 6.0, ordered by rating)
         context['top_rated'] = Anime.objects.filter(
@@ -223,6 +223,13 @@ class UserAnimeListView(LoginRequiredMixin, ListView):
     template_name = 'anime/my_list.html'
     context_object_name = 'user_anime_list'
     paginate_by = 24
+    login_url = 'anime:login'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.warning(request, 'Debes iniciar sesión para ver tu lista de anime.')
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
     
     def get_queryset(self):
         # Get the status filter from URL parameters, default to 'por_ver'
@@ -291,6 +298,13 @@ class FavoritesView(LoginRequiredMixin, ListView):
     template_name = 'anime/favorites.html'
     context_object_name = 'favorites'
     paginate_by = 12
+    login_url = 'anime:login'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.warning(request, 'Debes iniciar sesión para ver tus favoritos.')
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
     
     def get_queryset(self):
         # Clean up any favorites with no associated anime first
@@ -343,6 +357,13 @@ class FavoritesView(LoginRequiredMixin, ListView):
 
 class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'profile.html'
+    login_url = 'anime:login'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.warning(request, 'Debes iniciar sesión o registrarte para ver tu perfil.')
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
     
     def get_profile(self, user):
         """Get or create user profile"""
