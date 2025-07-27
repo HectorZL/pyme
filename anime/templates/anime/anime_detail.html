@@ -586,6 +586,28 @@ $(document).ready(function() {
     }
 });
 
+// Handle spoiler show/hide buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // Delegación de eventos para los botones de spoiler
+    document.addEventListener('click', function(e) {
+        // Botón para mostrar spoiler
+        if (e.target.closest('.show-spoiler')) {
+            e.preventDefault();
+            const spoilerContent = e.target.closest('.spoiler-content');
+            spoilerContent.querySelector('.spoiler-alert').classList.add('d-none');
+            spoilerContent.querySelector('.spoiler-text').classList.remove('d-none');
+        }
+        
+        // Botón para ocultar spoiler
+        if (e.target.closest('.hide-spoiler')) {
+            e.preventDefault();
+            const spoilerContent = e.target.closest('.spoiler-content');
+            spoilerContent.querySelector('.spoiler-alert').classList.remove('d-none');
+            spoilerContent.querySelector('.spoiler-text').classList.add('d-none');
+        }
+    });
+});
+
 // Handle star rating
 const ratingContainer = document.querySelector('#rating-stars');
 const ratingStars = document.querySelectorAll('#rating-stars .fa-star');

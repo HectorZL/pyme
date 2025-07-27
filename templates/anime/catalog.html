@@ -41,52 +41,68 @@
             <!-- Filters Panel -->
             <div class="collapse" id="filtersCollapse">
                 <div class="filters-panel">
-                    <div class="filter-group">
-                        <h4 class="filter-title">Géneros</h4>
-                        <div class="filter-tags">
-                            <button class="filter-tag active">Todos</button>
-                            <button class="filter-tag">Acción</button>
-                            <button class="filter-tag">Aventura</button>
-                            <button class="filter-tag">Comedia</button>
-                            <button class="filter-tag">Drama</button>
-                            <button class="filter-tag">Fantasía</button>
-                            <button class="filter-tag">Romance</button>
-                            <button class="filter-tag">Ciencia Ficción</button>
-                            <button class="filter-tag">Sobrenatural</button>
+                    <form method="get" id="filter-form">
+                        <input type="hidden" name="q" value="{{ request.GET.q }}">
+                        <input type="hidden" name="view" value="{{ view_mode }}">
+                        <input type="hidden" name="sort" value="{{ current_sort }}">
+                        
+                        <div class="filter-group">
+                            <h4 class="filter-title">Géneros</h4>
+                            <div class="filter-tags">
+                                <button type="button" class="filter-tag {% if not request.GET.genre %}active{% endif %}" data-filter="genre" data-value="">
+                                    Todos
+                                </button>
+                                {% for genre in all_genres %}
+                                    <button type="button" class="filter-tag {% if request.GET.genre == genre.slug %}active{% endif %}" 
+                                            data-filter="genre" data-value="{{ genre.slug }}">
+                                        {{ genre.name }}
+                                    </button>
+                                {% endfor %}
+                                <input type="hidden" name="genre" id="genre-filter" value="{{ request.GET.genre|default:'' }}">
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <h4 class="filter-title">Año</h4>
-                        <div class="filter-tags">
-                            <button class="filter-tag active">Todos</button>
-                            <button class="filter-tag">2024</button>
-                            <button class="filter-tag">2023</button>
-                            <button class="filter-tag">2022</button>
-                            <button class="filter-tag">2021-2020</button>
-                            <button class="filter-tag">2019-2010</button>
+                        
+                        <div class="filter-group">
+                            <h4 class="filter-title">Año</h4>
+                            <div class="filter-tags">
+                                <button type="button" class="filter-tag {% if not request.GET.year %}active{% endif %}" data-filter="year" data-value="">
+                                    Todos
+                                </button>
+                                {% for year in all_years|slice:":5" %}
+                                    <button type="button" class="filter-tag {% if request.GET.year == year|stringformat:'s' %}active{% endif %}" 
+                                            data-filter="year" data-value="{{ year }}">
+                                        {{ year }}
+                                    </button>
+                                {% endfor %}
+                                <input type="hidden" name="year" id="year-filter" value="{{ request.GET.year|default:'' }}">
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <h4 class="filter-title">Tipo</h4>
-                        <div class="filter-tags">
-                            <button class="filter-tag active">Todos</button>
-                            <button class="filter-tag">TV</button>
-                            <button class="filter-tag">Película</button>
-                            <button class="filter-tag">OVA</button>
-                            <button class="filter-tag">Especial</button>
+                        
+                        <div class="filter-group">
+                            <h4 class="filter-title">Tipo</h4>
+                            <div class="filter-tags">
+                                <button type="button" class="filter-tag {% if not request.GET.type %}active{% endif %}" data-filter="type" data-value="">
+                                    Todos
+                                </button>
+                                {% for type_choice in type_choices %}
+                                    <button type="button" class="filter-tag {% if request.GET.type == type_choice.0 %}active{% endif %}" 
+                                            data-filter="type" data-value="{{ type_choice.0 }}">
+                                        {{ type_choice.1 }}
+                                    </button>
+                                {% endfor %}
+                                <input type="hidden" name="type" id="type-filter" value="{{ request.GET.type|default:'' }}">
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="filter-actions">
-                        <button class="btn btn-outline-light me-2">
-                            <i class="fas fa-times me-2"></i>Limpiar filtros
-                        </button>
-                        <button class="btn btn-primary">
-                            <i class="fas fa-check me-2"></i>Aplicar filtros
-                        </button>
-                    </div>
+                        
+                        <div class="filter-actions">
+                            <button type="button" class="btn btn-outline-light me-2" id="reset-filters">
+                                <i class="fas fa-times me-2"></i>Limpiar filtros
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check me-2"></i>Aplicar filtros
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -397,15 +413,61 @@
 
     // Initialize view mode from URL or default to grid
     document.addEventListener('DOMContentLoaded', function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const viewMode = urlParams.get('view') || 'grid';
+        // Handle filter tag clicks
+        document.querySelectorAll('.filter-tag').forEach(button => {
+            button.addEventListener('click', function() {
+                const filterType = this.dataset.filter;
+                const filterValue = this.dataset.value;
+                
+                // Update the active state of buttons
+                document.querySelectorAll(`.filter-tag[data-filter="${filterType}"]`).forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Update the hidden input value
+                document.getElementById(`${filterType}-filter`).value = filterValue;
+                
+                // Automatically submit the form when a filter is selected
+                document.getElementById('filter-form').submit();
+            });
+        });
         
-        // Set active view button
-        document.querySelectorAll('.view-btn').forEach(btn => {
-            if (btn.dataset.view === viewMode) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
+        // Handle reset filters button
+        document.getElementById('reset-filters').addEventListener('click', function() {
+            // Clear all filter values
+            document.querySelectorAll('input[type="hidden"][name]').forEach(input => {
+                if (input.name !== 'q' && input.name !== 'view' && input.name !== 'sort') {
+                    input.value = '';
+                }
+            });
+            
+            // Reset active states
+            document.querySelectorAll('.filter-tag').forEach(btn => {
+                if (btn.dataset.value === '') {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            // Submit the form
+            document.getElementById('filter-form').submit();
+        });
+        
+        // Update active filter states on page load
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.forEach((value, key) => {
+            if (key === 'genre' || key === 'year' || key === 'type') {
+                const activeButtons = document.querySelectorAll(`.filter-tag[data-filter="${key}"][data-value="${value}"]`);
+                if (activeButtons.length > 0) {
+                    // Remove active class from all buttons in this filter group
+                    document.querySelectorAll(`.filter-tag[data-filter="${key}"]`).forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    // Add active class to the matching button
+                    activeButtons[0].classList.add('active');
+                }
             }
         });
     });
